@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>• TERMINAL WORD SEARCH •</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#000;color:#00ff00;font-family:'VT323',monospace;font-size:26px;overflow:hidden;height:100vh;display:flex;flex-direction:column;user-select:none;}
+    .crt::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,rgba(0,50,0,0.3)0px,rgba(0,50,0,0.3)1px,transparent1px,transparent2px),repeating-linear-gradient(90deg,rgba(0,50,0,0.15)0px,rgba(0,50,0,0.15)1px,transparent1px,transparent2px);pointer-events:none;z-index:9999;animation:s 12s linear infinite;}
+    @keyframes s{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+    header{background:#001100;padding:.8rem;text-align:center;border-bottom:4px double #00aa00;text-shadow:0 0 15px #00ff00;letter-spacing:2px;}
+    .marquee span{display:inline-block;animation:m 35s linear infinite;white-space:nowrap;padding-left:100%;}
+    @keyframes m{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+    #terminal{flex:1;padding:2rem;overflow-y:auto;}
+    #output{line-height:1.6;white-space:pre-wrap;}
+    #prompt{margin-top:1.5rem;display:flex;align-items:center;}
+    #cursor{display:inline-block;width:1.2rem;height:1.4rem;background:#00ff00;animation:b 1s steps(2) infinite;margin-left:4px;}
+    @keyframes b{from{background:#00ff00}to{background:#000}}
+    footer{background:#001000;padding:.6rem;text-align:center;font-size:.9rem;border-top:3px solid #004400;color:#008800;text-shadow:0 0 8px #00ff00;}
+</style>
+</head>
+<body class="crt">
+
+<header><div class="marquee"><span>TERMINAL WORD SEARCH • FIND THE HIDDEN PHRASE • TYPE WORDS TO SCORE • SYSTEM READY • </span></div></header>
+
+<div id="terminal">
+    <div id="output"></div>
+    <div id="prompt">&gt; <span id="input"></span><div id="cursor"></div></div>
+</div>
+
+<footer>• Press F11 for full terminal experience! •</footer>
+
+<!-- TINY BASE64-EMBEDDED SOUNDS (always work, no external load) -->
+<audio id="key" preload="auto">
+  <source src="Mechanical-keyboard-2.wav"> <!-- Real ASR-33 Teletype click -->
+</audio>
+<audio id="bell" preload="auto">
+  <source src="blip sound.wav"> <!-- Classic VT100 bell -->
+</audio>
+<audio id="hum" loop preload="auto">
+  <source src=""> <!-- PDP-11 room + disk hum (looped) -->
+</audio>
+<audio id="win" preload="auto">
+  <source src=""> <!-- C64-style victory beep -->
+</audio>
+
+<script>
+// Unlock audio on first user interaction (required by browsers)
+let audioUnlocked = false;
+function unlockAudio() {
+    if (audioUnlocked) return;
+    document.getElementById('hum').play().catch(()=>{});
+    audioUnlocked = true;
+    document.removeEventListener('keydown', unlockAudio);
+    document.removeEventListener('click', unlockAudio);
+}
+document.addEventListener('keydown', unlockAudio);
+document.addEventListener('click', unlockAudio);
+
+// Sound players
+const key  = document.getElementById('key');
+const bell = document.getElementById('bell');
+const hum  = document.getElementById('hum');
+const win  = document.getElementById('win');
+
+function playKey()  { if(audioUnlocked){ key.currentTime=0; key.volume=0.4; key.play(); }}
+function playBell() { if(audioUnlocked){ bell.currentTime=0; bell.volume=0.6; bell.play(); }}
+function playWin()  { if(audioUnlocked){ win.volume=0.7; win.play(); }}
+
+// Start background hum when unlocked
+const startHum = () => { if(audioUnlocked){ hum.volume=0.22; hum.loop=true; hum.play(); }};
+document.addEventListener('keydown', startHum, {once:true});
+
+// ================ GAME LOGIC (unchanged) ================
+const dictionary = ["COMPUTER","TERMINAL","KEYBOARD","MONITOR","PROGRAM","MEMORY","DISK","TAPE","BASIC","FORTRAN","COBOL","ALGOL","PASCAL","ASSEMBLY","BYTE","BIT","CHIP","CIRCUIT","TRANSISTOR","MAINFRAME","MINICOMPUTER","FLOPPY","HARDDRIVE","MODEM","PRINTER","TELETYPE","CRT","PIXEL","CURSOR","BOOT","LOGIN","PASSWORD","HACKER","DATA","CODE","COMPILER","DEBUG","SYNTAX","ERROR","RUN","LOAD","SAVE","LIST","PRINT","GOTO","IF","THEN","ELSE"];
+const secretPhrases = ["THE CAKE IS A LIE","HELLO WORLD","TRUST NO ONE","ACCESS DENIED","SYSTEM HALTED","PASSWORD ACCEPTED","INSERT COIN","GAME OVER MAN","ALL YOUR BASE","RESISTANCE IS FUTILE","NEED TESTERS","WINTER IS COMING","DO NOT PANIC","KILL SCREEN","ONE MORE GAME"];
+
+let currentPhrase = "", foundLetters = new Set(), score = 0, typed = "";
+
+const output = document.getElementById('output');
+const inputSpan = document.getElementById('input');
+
+function newGame() {
+    currentPhrase = secretPhrases[Math.floor(Math.random()*secretPhrases.length)];
+    foundLetters.clear(); score = 0; output.innerHTML = ""; printBoot();
+}
+function printBoot() {
+    const lines = ["DEC VT100 TERMINAL EMULATION v3.1","300 BAUD CONNECTION ESTABLISHED","LOADING WORD MATRIX...","INITIALIZING PHRASE DATABASE...","READY\n","SECRET PHRASE HIDDEN IN WORD LIST BELOW","TYPE ANY WORD FROM THE LIST TO REVEAL ITS FIRST LETTER","UNCOVER ALL LETTERS TO WIN\n"];
+    lines.forEach((l,i)=>setTimeout(()=>output.innerHTML+=l+"<br>",i*700));
+    setTimeout(printWordList, lines.length*700+300);
+}
+function printWordList() {
+    const s=[...dictionary].sort(()=>Math.random()-0.5); let line="";
+    s.forEach((w,i)=>{line+=w.padEnd(15); if((i+1)%5===0||i===s.length-1){output.innerHTML+=line+"<br>";line="";}});
+    output.innerHTML+="\n"; output.scrollTop=output.scrollHeight;
+}
+function revealProgress() {
+    return [...currentPhrase].map(c=>c===" "?"  ":foundLetters.has(c)?c:"▇").join(" ");
+}
+function processInput() {
+    const word=typed.trim().toUpperCase(); if(!word) return;
+    playBell();
+
+    if(dictionary.includes(word)){
+        const f=word[0];
+        if(!foundLetters.has(f)){foundLetters.add(f);score+=100;output.innerHTML+=`<span style="color:#00ff88">VALID » ${word}  (+100)</span><br>`;}
+        else output.innerHTML+=`<span style="color:#006600">ALREADY USED » ${word}</span><br>`;
+    }else output.innerHTML+=`<span style="color:#ff0066">UNKNOWN WORD » ${word}</span><br>`;
+
+    output.innerHTML+=`PROGRESS: ${revealProgress()}<br>SCORE   : ${score}<br>\n`;
+    output.scrollTop=output.scrollHeight;
+
+    if([...currentPhrase].every(c=>c===" "||foundLetters.has(c))){
+        setTimeout(()=>{playWin();
+            output.innerHTML+=`<br><span style="color:#ffff00;font-size:2em">PHRASE REVEALED!</span><br><span style="color:#00ffff;font-size:2.8em">${currentPhrase}</span><br><br>FINAL SCORE: ${score}<br>PRESS ANY KEY FOR NEW GAME<br>`;
+            document.addEventListener('keydown',()=>location.reload());
+        },600);
+    }
+    typed=""; inputSpan.textContent="";
+}
+
+// Input with authentic clacks
+document.addEventListener('keydown', e=>{
+    if(e.key==="Enter"){e.preventDefault();processInput();}
+    else if(e.key==="Backspace"){e.preventDefault();typed=typed.slice(0,-1);inputSpan.textContent=typed;}
+    else if(e.key.length===1 && /[a-zA-Z]/.test(e.key)){playKey();typed+=e.key.toUpperCase();inputSpan.textContent=typed;}
+});
+
+newGame();
+</script>
+</body>
+</html>

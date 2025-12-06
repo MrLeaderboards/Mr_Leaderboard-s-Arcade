@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSSIBLE STOPWATCH</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Cyberpunk Glitch Effect */
+        .glitch {
+            position: relative;
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 
+                0 0 5px #00ff41,
+                0 0 10px #00ff41,
+                0 0 20px #00ff41,
+                0 0 40px #00ff41,
+                0 0 80px #00ff41;
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { text-shadow: 0.05em 0 0 #00ff41, -0.05em -0.025em 0 #ff00ff, 0.025em 0.05em 0 #ffff00; }
+            14% { text-shadow: 0.05em 0 0 #00ff41, -0.05em -0.025em 0 #ff00ff, 0.025em 0.05em 0 #ffff00; }
+            15% { text-shadow: -0.05em -0.025em 0 #00ff41, 0.025em 0.05em 0 #ff00ff, -0.05em 0 0 #ffff00; }
+            49% { text-shadow: -0.05em -0.025em 0 #00ff41, 0.025em 0.05em 0 #ff00ff, -0.05em 0 0 #ffff00; }
+            50% { text-shadow: 0.025em 0.05em 0 #00ff41, 0.05em 0 0 #ff00ff, 0 -0.05em 0 #ffff00; }
+            99% { text-shadow: 0.025em 0.05em 0 #00ff41, 0.05em 0 0 #ff00ff, 0 -0.05em 0 #ffff00; }
+        }
+
+        /* Scanlines */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 2rem;
+            border: 2px solid #00ff41;
+            border-radius: 15px;
+            background: rgba(10, 10, 10, 0.8);
+            box-shadow: 
+                0 0 20px #00ff41,
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .timer {
+            font-size: 6rem;
+            font-weight: 900;
+            margin: 1.5rem 0;
+            color: #00ff41;
+            text-shadow: 
+                0 0 10px #00ff41,
+                0 0 20px #00ff41,
+                0 0 40px #00ff41;
+            letter-spacing: 0.05em;
+        }
+
+        .level {
+            font-size: 1.8rem;
+            margin: 1rem 0;
+            color: #00ff88;
+        }
+
+        .high-score {
+            font-size: 1.4rem;
+            margin: 0.8rem 0;
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+            font-weight: 700;
+        }
+
+        .control-btn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 1.5rem auto;
+            display: block;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 65, 0.8),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .start {
+            background: radial-gradient(circle, #00ff41, #008f2a);
+            color: black;
+        }
+
+        .stop {
+            background: radial-gradient(circle, #ff0040, #8b0000);
+            color: white;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(255, 0, 64, 0.9);
+        }
+
+        .mute-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .mute-btn:hover {
+            background: #00ff41;
+            color: black;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 1.3rem;
+            min-height: 2rem;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .perfect {
+            animation: pulse 1s infinite;
+            color: #00ff41 !important;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Particle effect container */
+        #particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles"></div>
+    
+    <button class="mute-btn" id="muteBtn">UNMUTE</button>
+
+    <div class="container">
+        <h1 class="glitch" data-text="IMPOSSIBLE STOPWATCH">IMPOSSIBLE STOPWATCH</h1>
+        
+        <div class="level">TARGET: <span id="targetTime">1.000</span>s</div>
+        <div class="high-score">HIGH SCORE: <span id="highScore">0</span></div>
+        <div class="timer" id="timer">0.000</div>
+        
+        <button class="control-btn start" id="controlBtn">START</button>
+        
+        <div class="status" id="status">Press START (or Space) to begin</div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="startSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwF
+    " preload="auto"></audio>
+    <audio id="stopSound" src="data:audio/wav;base64,UklGRiQCAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQ
+    " preload="auto"></audio>
+    <audio id="perfectSound" src="data:audio/wav;base64,UklGRpgBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ
+    " preload="auto"></audio>
+    <audio id="failSound" src="data:audio/wav;base64,UklGRl4CAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQ
+    " preload="auto"></audio>
+
+    <script>
+        // Game state
+        let gameState = {
+            level: 1,
+            targetTime: 1.0,
+            isRunning: false,
+            startTime: 0,
+            currentTime: 0,
+            isMuted: false,
+            highScore: 0
+        };
+
+        // Load high score from localStorage
+        const savedHighScore = localStorage.getItem('impossibleStopwatchHighScore');
+        if (savedHighScore) {
+            gameState.highScore = parseInt(savedHighScore, 10);
+        }
+
+        // DOM elements
+        const timerEl = document.getElementById('timer');
+        const targetEl = document.getElementById('targetTime');
+        const highScoreEl = document.getElementById('highScore');
+        const controlBtn = document.getElementById('controlBtn');
+        const statusEl = document.getElementById('status');
+        const muteBtn = document.getElementById('muteBtn');
+
+        // Audio elements
+        const sounds = {
+            start: document.getElementById('startSound'),
+            stop: document.getElementById('stopSound'),
+            perfect: document.getElementById('perfectSound'),
+            fail: document.getElementById('failSound')
+        };
+
+        // Particle system
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = '#00ff41';
+            particle.style.borderRadius = '50%';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.pointerEvents = 'none';
+            particle.style.boxShadow = '0 0 10px #00ff41';
+            particle.style.animation = 'particle 1s ease-out forwards';
+            
+            document.getElementById('particles').appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        // Add particle animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes particle {
+                0% { transform: translate(0, 0) scale(1); opacity: 1; }
+                100% { transform: translate(${Math.random()*200-100}px, ${Math.random()*200-100}px) scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Play sound
+        function playSound(soundName) {
+            if (!gameState.isMuted && sounds[soundName]) {
+                sounds[soundName].currentTime = 0;
+                sounds[soundName].play().catch(() => {});
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            timerEl.textContent = gameState.currentTime.toFixed(3);
+            targetEl.textContent = gameState.targetTime.toFixed(3);
+            highScoreEl.textContent = gameState.highScore;
+        }
+
+        // Save high score
+        function saveHighScore() {
+            localStorage.setItem('impossibleStopwatchHighScore', gameState.highScore.toString());
+        }
+
+        // Start timer
+        function startTimer() {
+            if (gameState.isRunning) return;
+            
+            gameState.isRunning = true;
+            gameState.startTime = performance.now();
+            controlBtn.className = 'control-btn stop';
+            controlBtn.textContent = 'STOP';
+            statusEl.textContent = `STOP AT EXACTLY ${gameState.targetTime.toFixed(3)}s`;
+            statusEl.classList.remove('perfect');
+            playSound('start');
+            
+            // Create start particles
+            const rect = controlBtn.getBoundingClientRect();
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createParticle(
+                        rect.left + rect.width/2 + (Math.random()-0.5)*60,
+                        rect.top + rect.height/2 + (Math.random()-0.5)*60
+                    );
+                }, i * 30);
+            }
+            
+            tick();
+        }
+
+        // Stop timer
+        function stopTimer() {
+            if (!gameState.isRunning) return;
+            
+            gameState.isRunning = false;
+            gameState.currentTime = (performance.now() - gameState.startTime) / 1000;
+            controlBtn.className = 'control-btn start';
+            controlBtn.textContent = 'START';
+            playSound('stop');
+            updateDisplay();
+            
+            checkResult();
+        }
+
+        // Check if perfect
+        function checkResult() {
+            const diff = Math.abs(gameState.currentTime - gameState.targetTime);
+            
+            if (diff < 0.001) { // Perfect within 1ms
+                success();
+            } else {
+                fail();
+            }
+        }
+
+        // Success
+        function success() {
+            playSound('perfect');
+            statusEl.textContent = `PERFECT! +${gameState.level}`;
+            statusEl.classList.add('perfect');
+            
+            // Level up
+            gameState.level++;
+            gameState.targetTime = gameState.level;
+            
+            // Update high score if current level - 1 is higher
+            const currentScore = gameState.level - 1;
+            if (currentScore > gameState.highScore) {
+                gameState.highScore = currentScore;
+                saveHighScore();
+                highScoreEl.textContent = gameState.highScore;
+                highScoreEl.style.animation = 'pulse 0.5s 3';
+            }
+            
+            // Victory particles
+            const rect = controlBtn.getBoundingClientRect();
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createParticle(
+                        rect.left + rect.width/2 + (Math.random()-0.5)*100,
+                        rect.top + rect.height/2 + (Math.random()-0.5)*100
+                    );
+                }, i * 20);
+            }
+            
+            setTimeout(() => {
+                statusEl.textContent = `Ready for Level ${gameState.level}!`;
+            }, 2000);
+        }
+
+        // Fail
+        function fail() {
+            playSound('fail');
+            statusEl.textContent = `MISSED`;
+            statusEl.style.color = '#ff0040';
+            statusEl.style.textShadow = '0 0 10px #ff0040';
+            
+            // Reset to level 1
+            gameState.level = 1;
+            gameState.targetTime = 1.0;
+            
+            setTimeout(() => {
+                statusEl.textContent = 'Press START (or Space) to try again';
+                statusEl.style.color = '#00ffff';
+                statusEl.style.textShadow = '0 0 10px #00ffff';
+            }, 2000);
+        }
+
+        // Timer tick
+        function tick() {
+            if (!gameState.isRunning) return;
+            
+            gameState.currentTime = (performance.now() - gameState.startTime) / 1000;
+            updateDisplay();
+            
+            requestAnimationFrame(tick);
+        }
+
+        // Control button click
+        controlBtn.addEventListener('click', () => {
+            if (gameState.isRunning) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        });
+
+        // Spacebar to start
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !gameState.isRunning && document.activeElement === document.body) {
+                e.preventDefault();
+                startTimer();
+            }
+        });
+
+        // Mute toggle
+        muteBtn.addEventListener('click', () => {
+            gameState.isMuted = !gameState.isMuted;
+            muteBtn.textContent = gameState.isMuted ? 'MUTED' : 'UNMUTE';
+            muteBtn.style.background = gameState.isMuted ? '#333' : 'rgba(0, 0, 0, 0.7)';
+        });
+
+        // Initialize
+        updateDisplay();
+        statusEl.textContent = 'Press START (or Space) to begin';
+
+        // Add glitch effect to title periodically
+        setInterval(() => {
+            const title = document.querySelector('.glitch');
+            title.style.animation = 'none';
+            setTimeout(() => {
+                title.style.animation = 'glitch 2s infinite';
+            }, 100);
+        }, 5000);
+    </script>
+</body>
+</html>

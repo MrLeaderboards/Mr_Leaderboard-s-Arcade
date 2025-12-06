@@ -1,0 +1,514 @@
+# Writing an updated HTML file that wraps the user's original content in an arcade cabinet frame.
+new_html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>IMPOSSIBLE STOPWATCH — ARCADE CABINET</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        :root{
+            --neon: #00ff41;
+            --neon-2: #00ffff;
+            --accent: #ff0040;
+            --cabinet-bg: #0a0a0a;
+            --wood: linear-gradient(180deg,#3b2b20 0%, #2b1d14 100%);
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{
+            font-family:'Orbitron',monospace;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(0,255,65,0.03), transparent 8%),
+                        radial-gradient(900px 400px at 90% 90%, rgba(255,0,64,0.02), transparent 6%),
+                        var(--cabinet-bg);
+            color:var(--neon);
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            overflow:hidden;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:2rem;
+        }
+
+        /* ---------- Arcade cabinet frame ---------- */
+        .arcade {
+            position: relative;
+            width: min(1100px, 98vw);
+            height: min(820px, 92vh);
+            border-radius: 28px;
+            padding: 2.2rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.6),
+                inset 0 0 120px rgba(0,255,65,0.03);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            pointer-events:none; /* outer frame decorative—inner elements remain interactive */
+        }
+
+        /* Cabinet bezel */
+        .cabinet-bezel {
+            position:absolute;
+            inset:0;
+            border-radius:24px;
+            padding:28px;
+            background:
+                linear-gradient(180deg,#0b0b0b 0%, #0a0a0a 30%, #060606 100%);
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,0.8),
+                0 10px 40px rgba(0,0,0,0.6),
+                0 0 0 6px rgba(0,0,0,0.6),
+                0 0 0 8px rgba(0,0,0,0.4);
+            pointer-events:none;
+        }
+
+        /* Neon trim */
+        .cabinet-bezel::before{
+            content:"";
+            position:absolute;
+            inset:14px;
+            border-radius:14px;
+            pointer-events:none;
+            box-shadow: 0 0 40px rgba(0,255,65,0.18);
+            border: 3px solid rgba(0,255,65,0.12);
+        }
+
+        /* Side panels (artwork) */
+        .side-panel{
+            position:absolute;
+            top:28px;
+            bottom:28px;
+            width:160px;
+            border-radius:14px;
+            pointer-events:none;
+            background: linear-gradient(180deg, rgba(255,0,64,0.06), rgba(0,0,0,0.7));
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.7);
+        }
+        .side-panel.left{ left:28px; transform: skewY(-4deg); background-image: linear-gradient(180deg,#1b0018,#0b0b0b); background-blend-mode:overlay; }
+        .side-panel.right{ right:28px; transform: skewY(4deg); background-image: linear-gradient(180deg,#00181b,#0b0b0b); background-blend-mode:overlay; }
+
+        /* Marquee (top) */
+        .marquee {
+            position:absolute;
+            top:12px;
+            left:50%;
+            transform:translateX(-50%);
+            pointer-events:none;
+            width:60%;
+            height:70px;
+            border-radius:10px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: linear-gradient(90deg, rgba(0,255,65,0.04), rgba(255,255,255,0.02));
+            box-shadow: 0 6px 30px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,255,65,0.03);
+            border: 3px solid rgba(255,255,255,0.03);
+        }
+        .marquee .title {
+            font-weight:900;
+            letter-spacing:0.12em;
+            color:var(--neon);
+            text-shadow: 0 0 12px rgba(0,255,65,0.55), 0 0 24px rgba(0,255,65,0.2);
+            font-size:1.3rem;
+        }
+
+        /* Screen area */
+        .screen {
+            position:relative;
+            width: calc(100% - 320px);
+            height: calc(100% - 160px);
+            background: radial-gradient(1200px 400px at 30% 20%, rgba(0,255,65,0.02), transparent 6%),
+                        rgba(5,5,5,0.9);
+            border-radius:10px;
+            padding:24px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            pointer-events:auto; /* make inner content interactive */
+            box-shadow: 
+                inset 0 0 80px rgba(0,255,65,0.02),
+                0 8px 40px rgba(0,0,0,0.6);
+            border: 3px solid rgba(0,0,0,0.6);
+        }
+
+        /* Decorative speaker grille & controls area (bottom) */
+        .kickplate {
+            position:absolute;
+            bottom:18px;
+            left:50%;
+            transform:translateX(-50%);
+            width:70%;
+            height:80px;
+            border-radius:8px;
+            background: linear-gradient(180deg,#191919,#0b0b0b);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:12px 18px;
+            pointer-events:none;
+        }
+        .grille {
+            width:48%;
+            height:56px;
+            background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent 10%);
+            border-radius:6px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .grille::before{
+            content:"";
+            width:90%;
+            height:6px;
+            background: repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+            border-radius:3px;
+            opacity:0.75;
+        }
+
+        .controls-deco{
+            width:28%;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            justify-content:center;
+        }
+        /* Decorative joystick and buttons (pure CSS) */
+        .joystick {
+            width:46px; height:46px; border-radius:50%; background: radial-gradient(circle,#222,#000); box-shadow: inset 0 -6px 10px rgba(0,0,0,0.7);
+            position:relative; display:flex; align-items:center; justify-content:center;
+        }
+        .joystick::after{
+            content:""; width:20px;height:20px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px rgba(255,0,64,0.5);
+        }
+        .btns { display:flex; flex-direction:column; gap:8px; }
+        .btn { width:36px;height:36px;border-radius:50%; background:linear-gradient(180deg,#ff6b85,#b2002a); box-shadow:0 0 12px rgba(255,0,64,0.5); }
+
+        /* Make inner game area responsive and keep original styles inside */
+        .game-wrap{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* Keep existing container centered & interactive */
+        .container{
+            text-align:center;
+            z-index:10;
+            padding:2rem;
+            border:2px solid var(--neon);
+            border-radius:12px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.85), rgba(5,5,5,0.6));
+            box-shadow: 0 0 30px rgba(0,255,65,0.06), inset 0 0 20px rgba(0,255,65,0.03);
+            max-width:760px;
+            width:calc(100% - 120px);
+            pointer-events:auto;
+        }
+
+        /* Keep original styles but slightly adjusted */
+        .glitch{ position:relative; font-size:3rem; font-weight:900; text-transform:uppercase; letter-spacing:0.1em; text-shadow: 0 0 6px var(--neon), 0 0 12px var(--neon); animation:glitch 2s infinite;}
+        @keyframes glitch{ 0%,100%{ text-shadow: 0.05em 0 0 var(--neon), -0.05em -0.025em 0 #ff00ff, 0.025em 0.05em 0 #ffff00; } 15%{ text-shadow: -0.05em -0.025em 0 var(--neon), 0.025em 0.05em 0 #ff00ff, -0.05em 0 0 #ffff00; } 50%{ text-shadow: 0.025em 0.05em 0 var(--neon), 0.05em 0 0 #ff00ff, 0 -0.05em 0 #ffff00; } }
+
+        /* Reuse some existing classes for timer */
+        h1{ font-size:1.6rem; margin-bottom:0.5rem; color:var(--neon); text-shadow:0 0 8px var(--neon); }
+        .timer{ font-size:4.2rem; font-weight:900; margin:1rem 0; color:var(--neon); text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); letter-spacing:0.05em; }
+        .level{ font-size:1.1rem; margin:0.5rem 0; color:#00ff88; }
+        .high-score{ font-size:0.95rem; margin:0.5rem 0; color:#ffff00; text-shadow:0 0 8px #ffff00; font-weight:700; }
+        .control-btn{ width:110px;height:110px;border-radius:50%;border:none;font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;cursor:pointer;margin:1rem auto;display:block;position:relative;overflow:hidden;transition:all 0.2s;box-shadow: 0 0 20px rgba(0,255,65,0.8), inset 0 0 18px rgba(0,0,0,0.5); }
+        .start{ background: radial-gradient(circle,#00ff41,#008f2a); color:black; }
+        .stop{ background: radial-gradient(circle,#ff0040,#8b0000); color:white; }
+        .mute-btn{ position:absolute; top:18px; right:18px; background: rgba(0,0,0,0.7); border:1px solid var(--neon); color:var(--neon); padding:0.4rem 0.8rem; border-radius:8px; font-family:'Orbitron',monospace; cursor:pointer; z-index:100; pointer-events:auto; transition:all 0.2s;}
+        .mute-btn:hover{ background:var(--neon); color:#000; }
+
+        .status{ margin-top:0.8rem; font-size:1rem; min-height:2rem; color:var(--neon-2); text-shadow: 0 0 8px var(--neon-2); }
+        .perfect{ animation:pulse 1s infinite; color:var(--neon) !important; }
+        @keyframes pulse{ 0%{opacity:1}50%{opacity:0.7}100%{opacity:1} }
+
+        /* Scanlines overlay */
+        .scanlines{
+            position:absolute; inset:0; pointer-events:none; z-index:40;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12) 1px, transparent 1px, transparent 2px);
+            mix-blend-mode: multiply;
+            animation: scan 8s linear infinite;
+        }
+        @keyframes scan{ 0%{ transform: translateY(-100%);}100%{ transform: translateY(100%);} }
+
+        /* Particles */
+        #particles{ position:absolute; width:100%; height:100%; top:0; left:0; pointer-events:none; z-index:45; }
+
+        /* Responsive tweaks */
+        @media (max-width:900px){
+            .arcade{ padding:1.2rem; border-radius:16px; }
+            .side-panel{ display:none; }
+            .marquee{ width:80%; height:56px; top:8px; }
+            .cabinet-bezel::before{ inset:10px; }
+            .container{ width:calc(100% - 40px); padding:1.2rem; border-radius:10px; }
+            .timer{ font-size:3rem; }
+            .control-btn{ width:86px;height:86px; }
+        }
+    </style>
+</head>
+<body>
+    <!--
+      Updated arcade-wrapped version of your original file.
+      Source: original uploaded file 'impossible_stopwatch.html'. fileciteturn0file0
+    -->
+    <div class="arcade" aria-hidden="false">
+        <div class="cabinet-bezel" aria-hidden="true"></div>
+
+        <div class="side-panel left" aria-hidden="true"></div>
+        <div class="side-panel right" aria-hidden="true"></div>
+
+        <div class="marquee" aria-hidden="true"><div class="title">IMPOSSIBLE STOPWATCH</div></div>
+
+        <div class="screen" role="main" aria-label="Game screen">
+            <div class="game-wrap">
+                <!-- Particles and interactive elements from original file retained below -->
+                <div id="particles"></div>
+
+                <button class="mute-btn" id="muteBtn">UNMUTE</button>
+
+                <div class="container">
+                    <h1 class="glitch" data-text="IMPOSSIBLE STOPWATCH">IMPOSSIBLE STOPWATCH</h1>
+                    
+                    <div class="level">TARGET: <span id="targetTime">1.000</span>s</div>
+                    <div class="high-score">HIGH SCORE: <span id="highScore">0</span></div>
+                    <div class="timer" id="timer">0.000</div>
+                    
+                    <button class="control-btn start" id="controlBtn">START</button>
+                    
+                    <div class="status" id="status">Press START (or Space) to begin</div>
+                </div>
+
+                <!-- Audio Elements (unchanged) -->
+                <audio id="startSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwF
+                " preload="auto"></audio>
+                <audio id="stopSound" src="data:audio/wav;base64,UklGRiQCAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQ
+                " preload="auto"></audio>
+                <audio id="perfectSound" src="data:audio/wav;base64,UklGRpgBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ
+                " preload="auto"></audio>
+                <audio id="failSound" src="data:audio/wav;base64,UklGRl4CAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQ
+                " preload="auto"></audio>
+            </div>
+        </div>
+
+        <div class="kickplate" aria-hidden="true">
+            <div class="grille"></div>
+            <div class="controls-deco">
+                <div class="joystick" aria-hidden="true"></div>
+                <div class="btns" aria-hidden="true">
+                    <div class="btn"></div>
+                    <div class="btn"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state (kept exactly as original so behavior is unchanged)
+        let gameState = {
+            level: 1,
+            targetTime: 1.0,
+            isRunning: false,
+            startTime: 0,
+            currentTime: 0,
+            isMuted: false,
+            highScore: 0
+        };
+
+        const savedHighScore = localStorage.getItem('impossibleStopwatchHighScore');
+        if (savedHighScore) { gameState.highScore = parseInt(savedHighScore, 10); }
+
+        const timerEl = document.getElementById('timer');
+        const targetEl = document.getElementById('targetTime');
+        const highScoreEl = document.getElementById('highScore');
+        const controlBtn = document.getElementById('controlBtn');
+        const statusEl = document.getElementById('status');
+        const muteBtn = document.getElementById('muteBtn');
+
+        const sounds = {
+            start: document.getElementById('startSound'),
+            stop: document.getElementById('stopSound'),
+            perfect: document.getElementById('perfectSound'),
+            fail: document.getElementById('failSound')
+        };
+
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = '#00ff41';
+            particle.style.borderRadius = '50%';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.pointerEvents = 'none';
+            particle.style.boxShadow = '0 0 10px #00ff41';
+            particle.style.animation = 'particle 1s ease-out forwards';
+            
+            document.getElementById('particles').appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes particle {
+                0% { transform: translate(0, 0) scale(1); opacity: 1; }
+                100% { transform: translate(${Math.random()*200-100}px, ${Math.random()*200-100}px) scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        function playSound(soundName) {
+            if (!gameState.isMuted && sounds[soundName]) {
+                sounds[soundName].currentTime = 0;
+                sounds[soundName].play().catch(() => {});
+            }
+        }
+
+        function updateDisplay() {
+            timerEl.textContent = gameState.currentTime.toFixed(3);
+            targetEl.textContent = gameState.targetTime.toFixed(3);
+            highScoreEl.textContent = gameState.highScore;
+        }
+
+        function saveHighScore() { localStorage.setItem('impossibleStopwatchHighScore', gameState.highScore.toString()); }
+
+        function startTimer() {
+            if (gameState.isRunning) return;
+            
+            gameState.isRunning = true;
+            gameState.startTime = performance.now();
+            controlBtn.className = 'control-btn stop';
+            controlBtn.textContent = 'STOP';
+            statusEl.textContent = `STOP AT EXACTLY ${gameState.targetTime.toFixed(3)}s`;
+            statusEl.classList.remove('perfect');
+            playSound('start');
+            
+            const rect = controlBtn.getBoundingClientRect();
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createParticle(
+                        rect.left + rect.width/2 + (Math.random()-0.5)*60,
+                        rect.top + rect.height/2 + (Math.random()-0.5)*60
+                    );
+                }, i * 30);
+            }
+            
+            tick();
+        }
+
+        function stopTimer() {
+            if (!gameState.isRunning) return;
+            
+            gameState.isRunning = false;
+            gameState.currentTime = (performance.now() - gameState.startTime) / 1000;
+            controlBtn.className = 'control-btn start';
+            controlBtn.textContent = 'START';
+            playSound('stop');
+            updateDisplay();
+            
+            checkResult();
+        }
+
+        function checkResult() {
+            const diff = Math.abs(gameState.currentTime - gameState.targetTime);
+            if (diff < 0.001) { success(); } else { fail(); }
+        }
+
+        function success() {
+            playSound('perfect');
+            statusEl.textContent = `PERFECT! +${gameState.level}`;
+            statusEl.classList.add('perfect');
+            
+            gameState.level++;
+            gameState.targetTime = gameState.level;
+            
+            const currentScore = gameState.level - 1;
+            if (currentScore > gameState.highScore) {
+                gameState.highScore = currentScore;
+                saveHighScore();
+                highScoreEl.textContent = gameState.highScore;
+                highScoreEl.style.animation = 'pulse 0.5s 3';
+            }
+            
+            const rect = controlBtn.getBoundingClientRect();
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createParticle(
+                        rect.left + rect.width/2 + (Math.random()-0.5)*100,
+                        rect.top + rect.height/2 + (Math.random()-0.5)*100
+                    );
+                }, i * 20);
+            }
+            
+            setTimeout(() => {
+                statusEl.textContent = `Ready for Level ${gameState.level}!`;
+            }, 2000);
+        }
+
+        function fail() {
+            playSound('fail');
+            statusEl.textContent = `MISSED`;
+            statusEl.style.color = '#ff0040';
+            statusEl.style.textShadow = '0 0 10px #ff0040';
+            
+            gameState.level = 1;
+            gameState.targetTime = 1.0;
+            
+            setTimeout(() => {
+                statusEl.textContent = 'Press START (or Space) to try again';
+                statusEl.style.color = '#00ffff';
+                statusEl.style.textShadow = '0 0 10px #00ffff';
+            }, 2000);
+        }
+
+        function tick() {
+            if (!gameState.isRunning) return;
+            
+            gameState.currentTime = (performance.now() - gameState.startTime) / 1000;
+            updateDisplay();
+            
+            requestAnimationFrame(tick);
+        }
+
+        controlBtn.addEventListener('click', () => {
+            if (gameState.isRunning) { stopTimer(); } else { startTimer(); }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !gameState.isRunning && document.activeElement === document.body) {
+                e.preventDefault();
+                startTimer();
+            }
+        });
+
+        muteBtn.addEventListener('click', () => {
+            gameState.isMuted = !gameState.isMuted;
+            muteBtn.textContent = gameState.isMuted ? 'MUTED' : 'UNMUTE';
+            muteBtn.style.background = gameState.isMuted ? '#333' : 'rgba(0, 0, 0, 0.7)';
+        });
+
+        updateDisplay();
+        statusEl.textContent = 'Press START (or Space) to begin';
+        setInterval(() => {
+            const title = document.querySelector('.glitch');
+            title.style.animation = 'none';
+            setTimeout(() => { title.style.animation = 'glitch 2s infinite'; }, 100);
+        }, 5000);
+    </script>
+</body>
+</html>
+"""
+
+path = "/mnt/data/impossible_stopwatch_arcade.html"
+with open(path, "w", encoding="utf-8") as f:
+    f.write(new_html)
+
+print("Wrote updated file to:", path)

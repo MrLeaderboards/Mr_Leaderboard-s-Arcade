@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mr Leaderboard's Arcade // 1987</title>
+    <style>
+        /* ==== GLOBAL RESET & 8-BIT FONT ==== */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: #000 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="%23000"/><circle cx="10" cy="10" r="1" fill="%23ff00ff"/></svg>') repeat;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.5;
+            overflow-x: hidden;
+            image-rendering: pixelated;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ffff00; }
+
+        /* ==== CRT EFFECT ==== */
+        .crt::before {
+            content: '';
+            display: block;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.15),
+                rgba(0,0,0,0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            animation: crt-scan 4s linear infinite;
+        }
+        @keyframes crt-scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(2px); }
+        }
+
+        /* ==== HEADER / MARQUEE ==== */
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        .marquee {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: #ff00ff;
+            color: #000;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+        .marquee span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 15s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .logo {
+            font-size: 3.2rem;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px #00ffff;
+            animation: pulse 2s infinite;
+            image-rendering: pixelated;
+            line-height: 1.2;
+        }
+        @keyframes pulse {
+            0%, 100% { text-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff; }
+            50% { text-shadow: 0 0 30px #ffff00, 0 0 60px #00ff00; }
+        }
+
+        /* ==== NAV ==== */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #000;
+            z-index: 1000;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 4px double #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+        }
+        nav a {
+            margin: 0 1.5rem;
+            font-size: 0.9rem;
+            position: relative;
+            padding: 0.3rem 0;
+        }
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 0;
+            width: 100%; height: 3px;
+            background: #ff00ff;
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        nav a:hover::after { transform: scaleX(1); }
+
+        /* ==== SECTIONS ==== */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+            position: relative;
+        }
+        h2::before, h2::after {
+            content: '[ ]';
+            color: #00ffff;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 50%; transform: translateY(-50%);
+        }
+        h2::before { left: -60px; }
+        h2::after { right: -60px; }
+
+        /* High Scores Table */
+        .scoreboard {
+            background: #111;
+            border: 4px solid #00ffff;
+            padding: 1.5rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        .scoreboard h3 {
+            text-align: center;
+            color: #ff00ff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px dashed #00ffff;
+        }
+        th { color: #ffff00; }
+        td:nth-child(2) { text-align: right; color: #00ff00; }
+
+        /* Games Grid */
+        .games {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .game-card {
+            background: #111;
+            border: 3px solid #ff00ff;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,0,255,0.5);
+        }
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #00ffff;
+            box-shadow: 0 0 25px #00ffff;
+        }
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="%23ff00ff" opacity="0.1"/></svg>') repeat;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .game-card:hover::before { opacity: 1; }
+        .game-icon {
+            width: 64px; height: 64px;
+            margin: 0 auto 1rem;
+            image-rendering: pixelated;
+            cursor: pointer;
+        }
+
+        /* Insert Coin Button */
+        .coin-btn {
+            display: block;
+            margin: 2rem auto;
+            background: #ffff00;
+            color: #000;
+            border: 4px double #000;
+            padding: 1rem 2rem;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px #ffff00;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* About */
+        .about {
+            background: #111;
+            border: 3px solid #00ff00;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 15px #00ff00;
+            font-size: 0.9rem;
+        }
+
+        /* Contact */
+        form {
+            display: grid;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 2rem auto;
+        }
+        input, textarea {
+            background: #000;
+            border: 2px solid #00ffff;
+            padding: 0.8rem;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+        button {
+            background: #ff00ff;
+            color: #000;
+            border: 3px solid #000;
+            padding: 1rem;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff00ff;
+        }
+        button:hover {
+            background: #00ffff;
+            box-shadow: 0 0 25px #00ffff;
+        }
+
+        /* ==== FOOTER ==== */
+        footer {
+            background: #000;
+            padding: 2rem;
+            text-align: center;
+            border-top: 4px double #ffff00;
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo { 
+                font-size: 2rem; 
+                line-height: 1.1;
+            }
+            nav a { margin: 0 0.8rem; font-size: 0.7rem; }
+            h2 { font-size: 1.5rem; }
+            h2::before, h2::after { display: none; }
+        }
+    </style>
+</head>
+<body class="crt">
+
+    <!-- MARQUEE -->
+    <div class="marquee">
+        <span>INSERT COIN TO CONTINUE  •  MR LEADERBOARD'S ARCADE  •  HIGH SCORE: 999,999  •  PLAYER 1 READY  •  GAME OVER? NEVER!  •  </span>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <a href="#home">HOME</a>
+        <a href="#games">GAMES</a>
+        <a href="#scores">SCORES</a>
+        <a href="#about">ABOUT</a>
+        <a href="#contact">CONTACT</a>
+    </nav>
+
+    <!-- HERO -->
+    <header id="home">
+        <h1 class="logo">Mr Leaderboard's<br>Arcade</h1>
+    </header>
+
+<!-- GAMES -->
+<section id="games">
+    <h2>GAMES</h2>
+    <div class="games">
+
+        <!-- Impossible Stopwatch -->
+        <div class="game-card" data-game="impossible_stopwatch.html">
+            <div class="game-preview">
+                <img src="https://via.placeholder.com/64x64/00ffff/000000?text=Timer" alt="Stopwatch" class="game-icon">
+                <h3>The impossible Stopwatch game</h3>
+            </div>
+            <button class="coin-btn">INSERT COIN</button>
+        </div>
+
+        <!-- Sweet Spot -->
+        <div class="game-card" data-game="Sweet spot.html">
+            <div class="game-preview">
+                <img src="https://via.placeholder.com/64x64/ff00ff/000000?text=Target" alt="Sweet Spot" class="game-icon">
+                <h3>The Sweet Spot</h3>
+            </div>
+            <button class="coin-btn">INSERT COIN</button>
+        </div>
+
+    </div>
+</section>
+
+<!-- HIGH SCORES -->
+<section id="scores">
+    <h2>HIGH SCORES</h2>
+    <div class="scoreboard">
+        <h3>Arcade Leaderboard</h3>
+        <table>
+            <tr>
+                <th>RANK</th>
+                <th>GAME</th>          <!-- NEW COLUMN -->
+                <th>NAME</th>
+                <th>SCORE</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td class="game-name">Impossible Stopwatch</td>
+                <td>AAA</td>
+                <td>999,999</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td class="game-name">Sweet Spot</td>
+                <td>KEN</td>
+                <td>875,400</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td class="game-name">Impossible Stopwatch</td>
+                <td>RYU</td>
+                <td>750,200</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td class="game-name">Sweet Spot</td>
+                <td>CHUN</td>
+                <td>620,100</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td class="game-name">Impossible Stopwatch</td>
+                <td>GUI</td>
+                <td>500,000</td>
+            </tr>
+        </table>
+    </div>
+</section>
+
+    <!-- ABOUT -->
+    <section id="about">
+        <h2>ABOUT</h2>
+        <div class="about">
+            I decided to make this website since I love arcade/indie genre games and wanted to share this passion with the world<br>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+        <h2>CONTACT</h2>
+        <form>
+            <input type="text" placeholder="PLAYER NAME" required />
+            <input type="email" placeholder="EMAIL" />
+            <textarea placeholder="MESSAGE OR PROOF OF HIGH SCORE" rows="4" required></textarea>
+            <button type="submit">SUBMIT SCORE</button>
+        </form>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>MR LEADERBOARD'S ARCADE</p>
+    </footer>
+
+<script>
+    // INSERT COIN → 1UP! flash + launch game
+    document.querySelectorAll('.coin-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // prevent card click while animating
+
+            const card = this.closest('.game-card');
+            const gameUrl = card.getAttribute('data-game');
+
+            // Flash 1UP!
+            const original = this.textContent;
+            this.textContent = 'Loading';
+            this.style.background = '#00ff00';
+            this.style.boxShadow = '0 0 30px #00ff00';
+
+            setTimeout(() => {
+                this.textContent = original;
+                this.style.background = '';
+                this.style.boxShadow = '';
+                window.location.href = gameUrl; // GO!
+            }, 1000);
+        });
+    });
+
+    // Also allow clicking anywhere on the card (classic arcade feel)
+    document.querySelectorAll('.game-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.coin-btn')) return; // let button handle it
+            window.location.href = this.getAttribute('data-game');
+        });
+    });
+
+    // Form fake submission
+    document.querySelector('form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('HIGH SCORE SUBMITTED! CHECK LEADERBOARD SOON.');
+        this.reset();
+    });
+
+    // CRT flicker
+    setInterval(() => {
+        if (Math.random() > 0.95) {
+            document.body.style.filter = 'brightness(1.3)';
+            setTimeout(() => document.body.style.filter = '', 80);
+        }
+    }, 400);
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a7c0ce099d4e3f4',t:'MTc2NDY5MTM2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a7c1338eb040538',t:'MTc2NDY5MTYyNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a7c17a2fcb0e452',t:'MTc2NDY5MTgwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

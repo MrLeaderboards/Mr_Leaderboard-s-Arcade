@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mr Leaderboard's Arcade // 1987</title>
+    <style>
+        /* ==== GLOBAL RESET & 8-BIT FONT ==== */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: #000 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="%23000"/><circle cx="10" cy="10" r="1" fill="%23ff00ff"/></svg>') repeat;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.5;
+            overflow-x: hidden;
+            image-rendering: pixelated;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ffff00; }
+
+        /* ==== CRT EFFECT ==== */
+        .crt::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: crt-scan 4s linear infinite;
+        }
+        @keyframes crt-scan { 0% { transform: translateY(0); } 100% { transform: translateY(2px); } }
+
+        /* ==== HEADER / MARQUEE ==== */
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        .marquee {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: #ff00ff;
+            color: #000;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+        .marquee span { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        .logo {
+            font-size: 3.2rem;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px #00ffff;
+            animation: pulse 2s infinite;
+            line-height: 1.2;
+            position: relative;
+            z-index: 2;
+        }
+        @keyframes pulse {
+            0%,100% { text-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff; }
+            50% { text-shadow: 0 0 30px #ffff00, 0 0 60px #00ff00; }
+        }
+
+        /* ==== ANIMATED NEON BLUE 8-BIT PYRAMID WITH FASTER CONSTANT 3D ROTATION ==== */
+        .pyramid-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-width: 800px;
+            perspective: 1500px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .pyramid {
+            width: 100%;
+            height: auto;
+            opacity: 0.35;
+            filter: drop-shadow(0 0 20px #00ffff) drop-shadow(0 0 40px #00ffff);
+            animation: pyramid-glow 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+            animation: constant-rotate 10s linear infinite;  /* Faster rotation: full 360° every 10 seconds */
+            image-rendering: pixelated;
+        }
+
+        @keyframes pyramid-glow {
+            0%   { filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00ffff); opacity: 0.3; }
+            50%  { filter: drop-shadow(0 0 35px #00ffff) drop-shadow(0 0 70px #00ffff); opacity: 0.5; }
+            100% { filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00ffff); opacity: 0.3; }
+        }
+
+        @keyframes constant-rotate {
+            0%   { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* ==== NAV ==== */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #000;
+            z-index: 1000;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 4px double #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+        }
+        nav a {
+            margin: 0 1.2rem;
+            font-size: 0.9rem;
+            position: relative;
+            padding: 0.3rem 0;
+        }
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 0;
+            width: 100%; height: 3px;
+            background: #ff00ff;
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        nav a:hover::after { transform: scaleX(1); }
+
+        /* ==== SECTIONS ==== */
+        section { padding: 6rem 2rem; max-width: 1000px; margin: 0 auto; position: relative; }
+        h2 { font-size: 2rem; text-align: center; margin-bottom: 2rem; color: #ffff00; text-shadow: 0 0 10px #ffff00; position: relative; }
+        h2::before, h2::after { content: '[ ]'; color: #00ffff; font-size: 1.5rem; position: absolute; top: 50%; transform: translateY(-50%); }
+        h2::before { left: -60px; } h2::after { right: -60px; }
+
+        /* Games */
+        .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+        .game-card { background: #111; border: 3px solid #ff00ff; padding: 1rem; text-align: center; position: relative; transition: all 0.3s; box-shadow: 0 0 15px rgba(255,0,255,0.5); }
+        .game-card:hover { transform: translateY(-10px); border-color: #00ffff; box-shadow: 0 0 25px #00ffff; }
+        .game-card::before { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="%23ff00ff" opacity="0.1"/></svg>') repeat; opacity: 0; transition: 0.3s; }
+        .game-card:hover::before { opacity: 1; }
+        .coin-btn { display: block; margin: 2rem auto 0; background: #ffff00; color: #000; border: 4px double #000; padding: 1rem 2rem; font-family: inherit; font-size: 1rem; cursor: pointer; box-shadow: 0 0 20px #ffff00; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+        /* Social */
+        #social { text-align: center; }
+        .social-grid { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 2rem; }
+        .social-btn { display: inline-flex; align-items: center; gap: 12px; background: #000; border: 3px solid; padding: 1rem 1.5rem; font-family: inherit; font-size: 1rem; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 0 15px; min-width: 220px; }
+        .social-btn:hover { transform: translateY(-8px); box-shadow: 0 0 30px; }
+        .social-btn.discord   { border-color: #5865F2; color: #5865F2; box-shadow: 0 0 15px #5865F2; }
+        .social-btn.discord:hover   { background: #5865F2; color: #000; }
+        .social-btn.twitter   { border-color: #1DA1F2; color: #1DA1F2; box-shadow: 0 0 15px #1DA1F2; }
+        .social-btn.twitter:hover   { background: #1DA1F2; color: #fff; }
+        .social-btn.youtube   { border-color: #FF0000; color: #FF0000; box-shadow: 0 0 15px #FF0000; }
+        .social-btn.youtube:hover   { background: #FF0000; color: #fff; }
+        .social-btn.twitch    { border-color: #9146FF; color: #9146FF; box-shadow: 0 0 15px #9146FF; }
+        .social-btn.twitch:hover    { background: #9146FF; color: #fff; }
+
+        /* High Scores */
+        .scoreboard {
+            position: relative;
+            background: #111;
+            border: 6px double #00ffff;
+            padding: 1.5rem;
+            box-shadow: 0 0 25px #00ffff, inset 0 0 30px rgba(0,255,255,0.2);
+            border-radius: 8px;
+            margin: 0 auto;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        .scoreboard::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .scoreboard h3 { text-align: center; color: #ffff00; text-shadow: 0 0 10px #ffff00; margin-bottom: 1rem; }
+        .scoreboard table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .scoreboard th, .scoreboard td { padding: 0.5rem; text-align: center; border: 1px solid #ff00ff; }
+        .scoreboard th { background: #222; color: #ffff00; text-shadow: 0 0 5px #ffff00; }
+        .scoreboard tr:nth-child(even) { background: #1a1a1a; }
+        .scoreboard tr:hover { background: #333; box-shadow: 0 0 10px #00ffff; }
+
+        /* Clickable proof row – arcade style */
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .clickable-row:hover {
+            background: #000044 !important;
+            box-shadow: 0 0 20px #00ffff;
+            transform: translateY(-3px);
+            color: #00ffff;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            border-top: 2px solid #00ffff;
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #00ffff;
+            box-shadow: 0 -5px 15px rgba(0,255,255,0.3);
+            background: #111;
+        }
+
+        @media (max-width: 768px) {
+            .logo { font-size: 2rem; line-height: 1.1; }
+            .pyramid-container { width: 90%; }
+        }
+    </style>
+</head>
+<body class="crt">
+
+    <!-- MARQUEE -->
+    <div class="marquee">
+        <span>INSERT COIN TO CONTINUE  •  MR LEADERBOARD'S ARCADE  •  HIGH SCORE: 999,999  •  PLAYER 1 READY  •  GAME OVER? NEVER!  •  </span>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <a href="#home">HOME</a>
+        <a href="#games">MY GAMES</a>
+        <a href="#scores">MY SCORES</a>
+        <a href="#social">MY SOCIALS</a>
+    </nav>
+
+    <!-- HERO WITH FASTER CONSTANT 3D ROTATION -->
+    <header id="home">
+        <div class="pyramid-container">
+            <svg class="pyramid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="neonBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0088ff;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <!-- 8-bit pyramid layers -->
+                <rect x="190" y="20" width="20" height="20" fill="url(#neonBlue)"/>
+                <rect x="170" y="40" width="60" height="20" fill="url(#neonBlue)"/>
+                <rect x="150" y="60" width="100" height="20" fill="url(#neonBlue)"/>
+                <rect x="130" y="80" width="140" height="20" fill="url(#neonBlue)"/>
+                <rect x="110" y="100" width="180" height="20" fill="url(#neonBlue)"/>
+                <rect x="90" y="120" width="220" height="20" fill="url(#neonBlue)"/>
+                <rect x="70" y="140" width="260" height="20" fill="url(#neonBlue)"/>
+                <rect x="50" y="160" width="300" height="20" fill="url(#neonBlue)"/>
+                <rect x="30" y="180" width="340" height="20" fill="url(#neonBlue)"/>
+                <rect x="10" y="200" width="380" height="20" fill="url(#neonBlue)"/>
+            </svg>
+        </div>
+        <h1 class="logo">Mr Leaderboard's<br>Arcade</h1>
+    </header>
+
+    <!-- GAMES -->
+    <section id="games">
+        <h2>🤖 Games I created! 🤖</h2>
+        <div class="games">
+            <div class="game-card" data-game="impossible_stopwatch.html">
+                <div class="game-preview"><h3>The Impossible Stopwatch Game</h3></div>
+                <button class="coin-btn">INSERT COIN</button>
+            </div>
+            <div class="game-card" data-game="Sweet spot.html">
+                <div class="game-preview"><h3>Sweet Spot</h3></div>
+                <button class="coin-btn">INSERT COIN</button>
+            </div>
+            <div class="game-card" data-game="The Cube Tac Toe.html">
+                <div class="game-preview"><h3>The Cube Tac Toe</h3></div>
+                <button class="coin-btn">INSERT COIN</button>
+            </div>
+            <div class="game-card" data-game="neon_invaders.html">
+            <h3>Neon Invaders 1987</h3>
+            <p style="margin: 1rem 0 0; font-size: 0.8rem; color:#00ffff;">←→ MOVE SPACE SHOOT</p>
+            <button class="coin-btn">INSERT COIN</button>
+        </div>
+            <div class="game-card" data-game="Matrix word game computer terminal.html">
+                <div class="game-preview"><h3>Computer Terminal Word Game</h3></div>
+                <button class="coin-btn">INSERT COIN</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- HIGH SCORES -->
+    <section id="scores">
+        <h2>👑 My Track Record 👑</h2>
+        <div class="scoreboard">
+            <h3>My Global Leaderboard Rankings</h3>
+            <table>
+                <tr><th>RANK</th><th>GAME</th><th>NAME</th><th>SCORE</th></tr>
+                <tr class="clickable-row" data-href="spin-ios.html"><td>#8 out of 428k players</td><td>Spin (IOS)</td><td>MrLeaderboards</td><td>1078</td></tr>
+                <tr class="clickable-row" data-href="Jelly-run.html"><td>#13 out of 114k players</td><td>Jelly Run (IOS)</td><td>MrLeaderboards</td><td>587</td></tr>
+                <tr class="clickable-row" data-href="Pop-the-lock.html"><td>#15 out of 9.4m players</td><td>Pop The Lock (IOS)</td><td>MrLeaderboards</td><td>228</td></tr>
+                <tr class="clickable-row" data-href="Impossible-Letter-Game-CA.html"><td>#101 out of 695k players</td><td>Impossible Letter Game</td><td>MrLeaderboards</td><td>0:01:41:52</td></tr>
+                <tr class="clickable-row" data-href="Rush-ios.html"><td>#176 out of 5.1m players</td><td>Rush (IOS)</td><td>MrLeaderboards</td><td>1679</td></tr>
+                <tr class="clickable-row" data-href="World-record-1.html"><td>World Record</td><td>Impossible Timer Game</td><td>MrLeaderboards</td><td>315 seconds</td></tr>
+                <tr class="clickable-row" data-href="World-record-2.html"><td>World Record</td><td>Impossible Letter Game</td><td>MrLeaderboards</td><td>5 World Records in an hour</td></tr>
+                <tr class="clickable-row" data-href="World-record-3.html"><td>World Record</td><td>Impossible Letter Game</td><td>MrLeaderboards</td><td>14,500</td></tr>
+                <tr class="clickable-row" data-href="World-record-4.html"><td>#119 out of 323k players</td><td>Impossible Letter Game</td><td>MrLeaderboards</td><td>0:00:25:97</td></tr>
+                <tr class="clickable-row" data-href="On Point.html"><td>#2 out of 188 players</td><td>On Point</td><td>MrLeaderboards</td><td>142</td></tr>
+                <tr class="clickable-row" data-href="Stop The Timer.html"><td>#3 out of 262 players</td><td>Stop The Timer</td><td>MrLeaderboards</td><td>96.04% / 2 points \</td></tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- SOCIAL -->
+    <section id="social">
+        <h2>↓ MY SOCIALS ↓</h2>
+        <p style="text-align:center; margin-bottom: 1rem; color:#00ffff;">Support me here! ;)</p>
+        <div class="social-grid">
+            <a href="https://discord.gg/QEgHBQjS" target="_blank" class="social-btn discord">Discord</a>
+            <a href="https://x.com/Mr_Leaderboards" target="_blank" class="social-btn twitter">X</a>
+            <a href="https://www.youtube.com/@MrLeaderboards" target="_blank" class="social-btn youtube">YouTube</a>
+            <a href="https://www.twitch.tv/mr_leaderboards" target="_blank" class="social-btn twitch">Twitch</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 Mr Leaderboard's Arcade. All rights reserved.</p>
+    </footer>
+
+    <audio id="coinSound" src="https://www.myinstants.com/media/sounds/insert-coin-arcade-machine.mp3" preload="auto"></audio>
+
+    <script>
+        document.querySelectorAll('.coin-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('coinSound').currentTime = 0;
+                document.getElementById('coinSound').play();
+                const url = this.closest('.game-card').dataset.game;
+                this.textContent = 'LOADING...';
+                this.style.background = '#00ff00';
+                setTimeout(() => location.href = url, 1000);
+            });
+        });
+
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', function() {
+                const url = this.getAttribute('data-href');
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            });
+        });
+
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                document.body.style.filter = 'brightness(1.3)';
+                setTimeout(() => document.body.style.filter = '', 80);
+            }
+        }, 400);
+    </script>
+</body>
+</html>

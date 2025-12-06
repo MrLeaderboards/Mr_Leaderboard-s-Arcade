@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impossible Balance Challenge</title>
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjYuMywgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy/P9b71AAAACXBIWXMAAATsAAAE7AGKbv1yAAABJklEQVR4nO2UsWoCQRRF7ypJCAgRwV9IBAuxE1t7OwsxWNoEGxt/QEO+wdL9CvVL1H8QlywocceTYkmIuO5sQCEEL7xi5nHnvnfnzTgAuiBSlzz8KnAV+JcCu520WknGnFlgvZZaLalYDKNclno9KQjsXGzYbKBSAekwUiloNKx05+svKqggX/5xBe++5HnR1TmOlM9LtzeR6YwyCTqo14+r/xndbiz9D0xRrRZaEYVcTup04vlWi7ZbqFaPrUmnodm00u0CAJ4H7Tb7xyfc7AuUStDvQxBYqd9TZANIb6975R8+dJ+9U+v5hG2/tggwBoZDmM/D9WQCrpuod7tFxsBgAIvF4f50CuPxGQRGI1guo3OzWdhNHKx3AKenNEne+g7iyEnyn6d4kpoUwUmTAAAAAElFTkSuQmCC">
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; color: #fff; font-family: Arial, sans-serif; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 10px; left: 10px; }
+        #score { font-size: 24px; }
+        #highScore { font-size: 20px; color: #aaa; }
+        #bonus { font-size: 18px; color: #0f0; margin-top: 5px; }
+        #gameOver { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; display: none; background: rgba(0,0,0,0.5);
+            padding: 20px; border-radius: 10px; box-shadow: 0 0 20px #f00;
+        }
+        #gameOver h1 { font-size: 40px; color: #f00; }
+        #gameOver p { font-size: 24px; }
+        #muteBtn { 
+            position: absolute; top: 10px; right: 10px; 
+            padding: 8px 16px; background: #333; color: #fff; border: 1px solid #666; 
+            border-radius: 5px; cursor: pointer; font-size: 14px; 
+        }
+        #muteBtn:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div id="score">Score: 0</div>
+        <div id="bonus">Perfect Balance: 0x</div>
+        <div id="highScore">High Score: 0</div>
+    </div>
+    <button id="muteBtn">Mute</button>
+    <div id="gameOver">
+        <h1>Game Over!</h1>
+        <p>Your Score: <span id="finalScore"></span></p>
+        <p>Press R to Restart</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const bonusEl = document.getElementById('bonus');
+        const highScoreEl = document.getElementById('highScore');
+        const gameOverEl = document.getElementById('gameOver');
+        const finalScoreEl = document.getElementById('finalScore');
+        const muteBtn = document.getElementById('muteBtn');
+
+        // ---------- Audio ----------
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let bonusHumOscillator = null;
+        let bonusWasActive = false;
+        let isMuted = false;
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+            if (isMuted && bonusHumOscillator) stopBonusHum();
+        });
+
+        function playBonusStart() {
+            if (isMuted) return;
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playBonusEnd() {
+            if (isMuted) return;
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // NEW RETRO GAME OVER SOUND - Classic "explosion" style (8-bit arcade)
+        function playGameOverSound() {
+            if (isMuted) return;
+            // Fast descending sweep (like a bomb falling)
+            const sweep = audioCtx.createOscillator();
+            const sweepGain = audioCtx.createGain();
+            sweep.type = 'sawtooth';
+            sweep.frequency.setValueAtTime(800, audioCtx.currentTime);
+            sweep.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.4);
+            sweepGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            sweepGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            sweep.connect(sweepGain).connect(audioCtx.destination);
+            sweep.start();
+            sweep.stop(audioCtx.currentTime + 0.4);
+
+            // Followed by a short "boom" (noise burst)
+            setTimeout(() => {
+                const noise = audioCtx.createBufferSource();
+                const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, audioCtx.currentTime);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+                noise.buffer = buffer;
+                noise.connect(filter).connect(gain).connect(audioCtx.destination);
+                noise.start();
+            }, 400);
+        }
+
+        function startBonusHum() {
+            if (isMuted || bonusHumOscillator) return;
+            bonusHumOscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            bonusHumOscillator.type = 'sine';
+            bonusHumOscillator.frequency.setValueAtTime(220, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            bonusHumOscillator.connect(gain).connect(audioCtx.destination);
+            bonusHumOscillator.start();
+        }
+
+        function stopBonusHum() {
+            if (bonusHumOscillator) { bonusHumOscillator.stop(); bonusHumOscillator = null; }
+        }
+
+        // ---------- Canvas ----------
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // ---------- Game state ----------
+        const ball = { x: canvas.width/2, radius: 20, velocityX: 0, tilt: 0 };
+        const beam = { y: canvas.height/2 + ball.radius, thickness: 5, tilt: 0 };
+        const gravity = 0.5, tiltSpeed = 0.05, maxTilt = Math.PI/6, friction = 0.98;
+
+        let score = 0, highScore = localStorage.getItem('highScore')||0,
+            difficulty = 1, perfectStreak = 0, streakBonus = 1,
+            gameOver = false, keys = {}, particles = [], glitchStartTime = 0;
+
+        const perfectAngleTolerance = 0.05;
+        const perfectStreakThreshold = 60;
+        const perfectBonusMultiplier = 3;
+
+        highScoreEl.textContent = `High Score: ${highScore}`;
+
+        // ---------- Particles ----------
+        function createParticles(x, y, count = 5) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                    life: 1, decay: Math.random()*0.02+0.01,
+                    color: '#0f0', size: Math.random()*3+1
+                });
+            }
+        }
+
+        // ---------- Input ----------
+        window.addEventListener('keydown', e => { keys[e.key] = true; });
+        window.addEventListener('keyup',   e => { keys[e.key] = false; });
+
+        // ---------- Update ----------
+        function update() {
+            if (gameOver) return;
+
+            // controls
+            if (keys['ArrowLeft'] || keys['a']) ball.tilt -= tiltSpeed;
+            if (keys['ArrowRight'] || keys['d']) ball.tilt += tiltSpeed;
+            ball.tilt = Math.max(-maxTilt, Math.min(maxTilt, ball.tilt));
+
+            // ---- gradual tippiness (exponential) ----
+            const baseTippiness = 1, maxTippiness = 5, growthRate = 2000;
+            const tippiness = baseTippiness + (maxTippiness - baseTippiness) *
+                              (1 - Math.exp(-score / growthRate));
+
+            // beam tilt (position + random) * tippiness
+            beam.tilt = ((ball.x - canvas.width/2) / canvas.width * Math.PI/4 * difficulty) * tippiness;
+            beam.tilt += Math.sin(Date.now()/1000) * 0.05 * difficulty * tippiness;
+
+            // physics
+            const effectiveG = gravity * Math.sin(beam.tilt - ball.tilt);
+            ball.velocityX += effectiveG;
+            ball.velocityX *= friction;
+            ball.x += ball.velocityX;
+
+            // wind
+            ball.x += Math.sin(Date.now()/500) * 0.1 * difficulty;
+
+            // ---- perfect balance ----
+            const angleDiff = Math.abs(beam.tilt - ball.tilt);
+            if (angleDiff < perfectAngleTolerance) {
+                perfectStreak++;
+                if (perfectStreak === perfectStreakThreshold + 1 && !bonusWasActive) {
+                    playBonusStart(); startBonusHum();
+                }
+                if (perfectStreak > perfectStreakThreshold) streakBonus = perfectBonusMultiplier;
+            } else {
+                if (bonusWasActive && perfectStreak <= perfectStreakThreshold) {
+                    stopBonusHum(); playBonusEnd();
+                }
+                perfectStreak = 0; streakBonus = 1;
+            }
+            bonusWasActive = perfectStreak > perfectStreakThreshold;
+            bonusEl.textContent = bonusWasActive ? `Perfect Balance: ${streakBonus}x` : 'Perfect Balance: 0x';
+
+            // fall-off
+            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width ||
+                Math.abs(ball.velocityX) > 10 * difficulty) endGame();
+
+            // score / difficulty
+            score += 0.1 * difficulty * streakBonus;
+            difficulty += 0.0001;
+            if (Math.random() < 0.01 * difficulty) ball.velocityX += (Math.random()-0.5)*2;
+
+            // particles
+            particles = particles.filter(p => {
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay; return p.life > 0;
+            });
+            if (bonusWasActive && Math.random() < 0.3) createParticles(ball.x, beam.y - ball.radius);
+
+            scoreEl.textContent = `Score: ${Math.floor(score)}`;
+        }
+
+        // ---------- Draw ----------
+        function drawBackground() {
+            const grad = ctx.createLinearGradient(0,0,0,canvas.height);
+            grad.addColorStop(0,'#222'); grad.addColorStop(1,'#000');
+            ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+
+        function applyGlitchEffect() {
+            const t = Date.now() - glitchStartTime;
+            const intensity = Math.sin(t/200)*10;
+
+            for (let i=0;i<5;i++) {
+                const y = Math.random()*canvas.height;
+                const off = (Math.random()-0.5)*intensity;
+                const h = Math.random()*50+10;
+                ctx.drawImage(canvas,0,y,canvas.width,h, off,y,canvas.width,h);
+            }
+
+            const split = Math.abs(intensity/2);
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(split,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'rgba(0,255,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'rgba(0,0,255,0.2)'; ctx.fillRect(-split,0,canvas.width,canvas.height);
+            ctx.globalCompositeOperation = 'source-over';
+
+            ctx.fillStyle = 'rgba(0,255,255,0.05)';
+            for (let y=0;y<canvas.height;y+=4) ctx.fillRect(0,y,canvas.width,1);
+
+            for (let i=0;i<100;i++) {
+                const x = Math.random()*canvas.width, y = Math.random()*canvas.height;
+                ctx.fillStyle = `rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255},0.1)`;
+                ctx.fillRect(x,y,2,2);
+            }
+        }
+
+        function draw() {
+            drawBackground();
+
+            const isPerfect = bonusWasActive;
+            // beam
+            ctx.strokeStyle = isPerfect ? '#00ff00' : '#0f0';
+            ctx.lineWidth = beam.thickness;
+            ctx.shadowColor = isPerfect ? '#00ff00' : '#0f0';
+            ctx.shadowBlur = isPerfect ? 15 : 5;
+            ctx.beginPath();
+            const leftY = beam.y + Math.tan(beam.tilt)*(canvas.width/2);
+            const rightY = beam.y - Math.tan(beam.tilt)*(canvas.width/2);
+            ctx.moveTo(0,leftY); ctx.lineTo(canvas.width,rightY);
+            ctx.stroke(); ctx.shadowBlur = 0;
+
+            // ball
+            const ballY = beam.y - ball.radius - Math.tan(beam.tilt)*(ball.x - canvas.width/2);
+            const ballGrad = ctx.createRadialGradient(ball.x-ball.radius/2, ballY-ball.radius/2,0,
+                                                    ball.x, ballY, ball.radius);
+            ballGrad.addColorStop(0,'#ff4444'); ballGrad.addColorStop(1,'#aa0000');
+            ctx.shadowColor = '#f00'; ctx.shadowBlur = 10;
+            ctx.fillStyle = ballGrad;
+            ctx.beginPath(); ctx.arc(ball.x, ballY, ball.radius,0,Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // perfect ring
+            if (isPerfect) {
+                ctx.strokeStyle = 'rgba(0,255,0,0.3)'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(ball.x, ballY, ball.radius+10,0,Math.PI*2); ctx.stroke();
+            }
+
+            // particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            if (gameOver) applyGlitchEffect();
+        }
+
+        // ---------- Game flow ----------
+        function endGame() {
+            gameOver = true;
+            glitchStartTime = Date.now();
+            stopBonusHum(); playGameOverSound();
+            finalScoreEl.textContent = Math.floor(score);
+            gameOverEl.style.display = 'block';
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                highScoreEl.textContent = `High Score: ${Math.floor(highScore)}`;
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if (gameOver && e.key === 'r') {
+                gameOver = false; gameOverEl.style.display = 'none';
+                score = 0; difficulty = 1; perfectStreak = 0; streakBonus = 1;
+                bonusWasActive = false; ball.x = canvas.width/2; ball.velocityX = 0;
+                ball.tilt = 0; beam.tilt = 0; bonusEl.textContent = 'Perfect Balance: 0x';
+                stopBonusHum(); particles = [];
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            beam.y = canvas.height/2 + ball.radius;
+            if (!gameOver) ball.x = canvas.width/2;
+        });
+
+        document.body.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }, {once:true});
+
+        // ---------- Loop ----------
+        function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+        gameLoop();
+    </script>
+</body>
+</html>

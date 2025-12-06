@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NEON INVADERS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+        background:#000;
+        color:#00ffff;
+        font-family:'Press Start 2P', cursive;
+        overflow:hidden;
+        image-rendering:pixelated;
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+    }
+    .crt::before {
+        content:''; position:fixed; inset:0;
+        background:repeating-linear-gradient(0deg,rgba(0,0,0,0.15),rgba(0,0,0,0.15) 1px,transparent 1px,transparent 2px);
+        pointer-events:none; z-index:9999;
+        animation:scan 8s linear infinite;
+    }
+    @keyframes scan { 0% { transform:translateY(-100%); } 100% { transform:translateY(100%); } }
+
+    header {
+        background:#ff00ff; color:#000; padding:0.6rem; text-align:center;
+        box-shadow:0 0 20px #ff00ff;
+        position:relative; z-index:10;
+    }
+    .marquee span {
+        display:inline-block; animation:marquee 20s linear infinite;
+        white-space:nowrap; padding-left:100%;
+    }
+    @keyframes marquee { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
+
+    #game-container {
+        flex:1; position:relative; background:#000;
+        display:flex; justify-content:center; align-items:center;
+    }
+    canvas {
+        border:8px solid #00ffff;
+        box-shadow:0 0 40px #00ffff, inset 0 0 40px rgba(0,255,255,0.3);
+        image-rendering:pixelated;
+    }
+
+    #start-screen, #game-over-screen {
+        position:absolute; inset:0; background:rgba(0,0,0,0.95);
+        display:flex; flex-direction:column; justify-content:center; align-items:center;
+        color:#fff; text-align:center; padding:2rem;
+    }
+    h1 {
+        font-size:3rem; margin-bottom:1rem;
+        background:linear-gradient(90deg,#00ffff,#ff00ff,#ffff00);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        animation:pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{ text-shadow:0 0 20px #00ffff; } 50%{ text-shadow:0 0 40px #ff00ff; } }
+
+    button {
+        margin-top:2rem; padding:1rem 3rem;
+        background:#ffff00; color:#000; border:5px double #000;
+        font-family:inherit; font-size:1.5rem; cursor:pointer;
+        box-shadow:0 0 30px #ffff00;
+        animation:blink 1.4s infinite;
+    }
+    @keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
+
+    #score-display, #lives-display, #high-score {
+        position:absolute; color:#ffff00;
+        font-size:1.0rem; text-shadow:0 0 10px #ffff00;
+        z-index:10;
+    }
+    #score-display { top:70px; left:20px; }
+    #lives-display { top:70px; right:20px; }
+    #high-score { top:105px; left:50%; transform:translateX(-50%); }
+
+    footer {
+        background:#111; padding:0.5rem; text-align:center;
+        color:#00ffff; font-size:0.7rem; border-top:3px solid #00ffff;
+    }
+</style>
+</head>
+<body class="crt">
+
+<header>
+    <div class="marquee"><span>• NEON INVADERS  •  FREE TO PLAY  •  FOLLOW MY SOCIALS!  •  @MrLeaderboards  •  </span></div>
+</header>
+
+<div id="game-container">
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <h1>NEON<br>INVADERS</h1>
+        <p style="max-width:600px; line-height:2; margin:2rem 0;">
+            MOVE WITH ← →  SHOOT WITH SPACE<br><br>
+            DESTROY ALL INVADERS BEFORE THEY REACH YOUR SHIP!
+        </p>
+        <button id="start-btn">PLAY</button>
+        <p style="margin-top:3rem; color:#ff00ff;">© 2025 Mr Leaderboard's Arcade</p>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="game-over-screen" style="display:none;">
+        <h1>GAME OVER</h1>
+        <p style="font-size:2rem; margin:2rem 0; color:#ffff00;">SCORE: <span id="final-score">0</span></p>
+        <button id="restart-btn">PLAY AGAIN</button>
+    </div>
+
+    <div id="score-display">SCORE: <span id="score">0</span></div>
+    <div id="lives-display">LIVES: <span id="lives">0</span></div>
+    <div id="high-score">HIGH SCORE: <span id="hiscore">0</span></div>
+</div>
+
+<footer>Press F11 for real arcade cabinet feel</footer>
+
+<audio id="coin" src="https://www.myinstants.com/media/sounds/insert-coin-arcade-machine.mp3" preload="auto"></audio>
+<audio id="shoot" src="laser.wav" preload="auto"></audio>
+<audio id="explosion" src="https://freesound.org/data/previews/276/276951_5123858-lq.mp3" preload="auto"></audio>
+<audio id="invaderkilled" src="https://freesound.org/data/previews/387/387232_7037-lq.mp3" preload="auto"></audio>
+<audio id="gameover" src="https://www.myinstants.com/media/sounds/arcade-game-over.mp3" preload="auto"></audio>
+
+<script>
+// === GAME CODE ===
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+
+let player, bullets = [], invaders = [], particles = [];
+let score = 0, lives = 3, highScore = localStorage.getItem('neonInvadersHS') || 0;
+let gameRunning = false;
+let keys = {};
+let invaderDirection = 1;
+let invaderSpeed = 0.5;
+
+document.getElementById('hiscore').textContent = highScore;
+
+// Prevent spacebar from scrolling the page
+window.addEventListener('keydown', e => {
+    if (e.code === 'Space') e.preventDefault();
+});
+
+window.addEventListener('keydown', e => { keys[e.key] = true; });
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// === CLASSES ===
+class Player {
+    constructor(){
+        this.width = 60; this.height = 40;
+        this.x = canvas.width/2 - this.width/2;
+        this.y = canvas.height - 80;
+        this.speed = 7;
+    }
+    draw(){
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(this.x+15, this.y, 30, 10);
+        ctx.fillRect(this.x+25, this.y-15, 10, 20);
+        ctx.fillRect(this.x, this.y+10, this.width, 15);
+    }
+    update(){
+        if(keys.ArrowLeft && this.x > 0) this.x -= this.speed;
+        if(keys.ArrowRight && this.x < canvas.width - this.width) this.x += this.speed;
+    }
+}
+
+class Bullet {
+    constructor(x,y){
+        this.x = x; this.y = y;
+        this.width = 6; this.height = 20;
+        this.speed = 10;
+    }
+    draw(){ ctx.fillStyle='#ffff00'; ctx.fillRect(this.x,this.y,this.width,this.height); }
+    update(){ this.y -= this.speed; }
+}
+
+class Invader {
+    constructor(x,y,type=0){
+        this.x = x; this.y = y;
+        this.width = 45; this.height = 35;
+        this.type = type;
+        this.alive = true;
+    }
+    draw(){
+        if(!this.alive) return;
+        const color = ['#ff00ff','#00ff00','#ffff00'][this.type];
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x+10, this.y, 25,10);
+        ctx.fillRect(this.x+5, this.y+10, 35,10);
+        ctx.fillRect(this.x, this.y+20, 45,10);
+        ctx.fillRect(this.x+15, this.y+25, 15,10);
+    }
+}
+
+class Particle {
+    constructor(x,y){
+        this.x = x; this.y = y;
+        this.size = Math.random()*5+2;
+        this.speedX = Math.random()*6-3;
+        this.speedY = Math.random()*6-3;
+        this.color = ['#00ffff','#ff00ff','#ffff00'][Math.floor(Math.random()*3)];
+        this.life = 30;
+    }
+    draw(){
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x,this.y,this.size,this.size);
+    }
+    update(){
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.life--;
+    }
+}
+
+// === GAME FUNCTIONS ===
+function initGame(){
+    score = 0; lives = 1;
+    document.getElementById('score').textContent = score;
+    document.getElementById('lives').textContent = lives;
+
+    player = new Player();
+    bullets = [];
+    particles = [];
+    invaders = [];
+
+    for(let row=0; row<5; row++){
+        for(let col=0; col<11; col++){
+            invaders.push(new Invader(100 + col*60, 80 + row*50, row%3));
+        }
+    }
+    invaderDirection = 1;
+    invaderSpeed = 0.5;
+}
+
+function shoot(){
+    if(!gameRunning || !player) return;
+    bullets.push(new Bullet(player.x + player.width/2 - 3, player.y));
+    document.getElementById('shoot').currentTime = 0;
+    document.getElementById('shoot').play();
+}
+
+window.addEventListener('keydown', e => {
+    if(e.code === 'Space' && !e.repeat){
+        shoot();
+    }
+});
+
+function updateGame(){
+    if(!gameRunning) return;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Player
+    player.update();
+    player.draw();
+
+    // Bullets
+    bullets = bullets.filter(b=>b.y > -20);
+    bullets.forEach(b=>{
+        b.update();
+        b.draw();
+
+        // Bullet → Invader collision
+        invaders.forEach(inv=>{
+            if(inv.alive &&
+               b.x > inv.x && b.x < inv.x+inv.width &&
+               b.y > inv.y && b.y < inv.y+inv.height){
+                inv.alive = false;
+                b.y = -100; // remove bullet
+                score += (3 - inv.type)*10;
+                document.getElementById('score').textContent = score;
+
+                // explosion particles
+                for(let i=0;i<15;i++) particles.push(new Particle(inv.x+20, inv.y+15));
+                document.getElementById('invaderkilled').currentTime=0;
+                document.getElementById('invaderkilled').play();
+
+                // increase speed every 10 kills
+                if(score % 200 === 0) invaderSpeed += 0.2;
+            }
+        });
+    });
+
+    // Invaders movement
+    let edgeHit = false;
+    invaders.forEach(inv=>{
+        if(inv.alive){
+            inv.x += invaderSpeed * invaderDirection;
+            if(inv.x <= 0 || inv.x >= canvas.width - inv.width) edgeHit = true;
+            if(inv.y + invaderSpeed * 10 > canvas.height - 100) gameOver(); // invaders reached player line
+        }
+        inv.draw();
+    });
+
+    if(edgeHit){
+        invaderDirection *= -1;
+        invaders.forEach(inv=> inv.y += 30);
+    }
+
+    // Particles
+    particles = particles.filter(p=>p.life>0);
+    particles.forEach(p=>{ p.update(); p.draw(); });
+
+    // Check win
+    if(invaders.every(i=>!i.alive)){
+        setTimeout(()=>alert('YOU WIN! Score: '+score), 500);
+        gameOver();
+    }
+
+    requestAnimationFrame(updateGame);
+}
+
+function gameOver(){
+    gameRunning = false;
+    document.getElementById('final-score').textContent = score;
+    if(score > highScore){
+        highScore = score;
+        localStorage.setItem('neonInvadersHS', highScore);
+        document.getElementById('hiscore').textContent = highScore;
+    }
+    document.getElementById('gameover').play();
+    gameOverScreen.style.display = 'flex';
+}
+
+// === START / RESTART ===
+startBtn.onclick = restartBtn.onclick = ()=>{
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    initGame();
+    gameRunning = true;
+    updateGame();
+};
+</script>
+</body>
+</html>
