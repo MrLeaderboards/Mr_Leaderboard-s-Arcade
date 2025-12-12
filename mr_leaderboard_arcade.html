@@ -380,13 +380,19 @@
                     loadingTimeouts.delete(btn);
                 }
                 btn.textContent = 'INSERT COIN';
-                btn.style.background = '#ffff00';
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.boxShadow = '';
+                btn.style.animation = '';
+                btn.style.transform = '';
+                btn.style.border = '';
             });
         }
 
         // Listen for events that indicate the user is leaving the page
         window.addEventListener('beforeunload', cleanupOnLeave);
         window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('pageshow', cleanupOnLeave);
     </script>
 </body>
 </html>
