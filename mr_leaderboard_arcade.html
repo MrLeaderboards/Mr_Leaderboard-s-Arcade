@@ -74,7 +74,7 @@
             50% { text-shadow: 0 0 30px #ffff00, 0 0 60px #00ff00; }
         }
 
-        /* ==== ANIMATED NEON BLUE 8-BIT PYRAMID WITH FASTER CONSTANT 3D ROTATION ==== */
+        /* ==== ANIMATED NEON BLUE 8-BIT PYRAMID ==== */
         .pyramid-container {
             position: absolute;
             top: 50%;
@@ -94,7 +94,7 @@
             filter: drop-shadow(0 0 20px #00ffff) drop-shadow(0 0 40px #00ffff);
             animation: pyramid-glow 6s ease-in-out infinite;
             transform-style: preserve-3d;
-            animation: constant-rotate 10s linear infinite;  /* Faster rotation: full 360° every 10 seconds */
+            animation: constant-rotate 10s linear infinite;
             image-rendering: pixelated;
         }
 
@@ -109,7 +109,7 @@
             100% { transform: rotateY(360deg); }
         }
 
-        /* ==== NAV ==== */
+        /* ==== NAV - FIXED: NO MORE FLICKERING ==== */
         nav {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -119,12 +119,19 @@
             text-align: center;
             border-bottom: 4px double #00ffff;
             box-shadow: 0 0 15px #00ffff;
+            /* Critical fixes to prevent flickering */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
         }
         nav a {
             margin: 0 1.2rem;
             font-size: 0.9rem;
             position: relative;
             padding: 0.3rem 0;
+            display: inline-block;
         }
         nav a::after {
             content: '';
@@ -194,7 +201,6 @@
         .scoreboard tr:nth-child(even) { background: #1a1a1a; }
         .scoreboard tr:hover { background: #333; box-shadow: 0 0 10px #00ffff; }
 
-        /* Clickable proof row – arcade style */
         .clickable-row {
             cursor: pointer;
             transition: all 0.25s;
@@ -207,7 +213,6 @@
             color: #00ffff;
         }
 
-        /* Footer */
         footer {
             text-align: center;
             padding: 1rem 0;
@@ -232,7 +237,7 @@
         <span>INSERT COIN TO CONTINUE  •  MR LEADERBOARD'S ARCADE  •  HIGH SCORE: 999,999  •  PLAYER 1 READY  •  GAME OVER? NEVER!  •  </span>
     </div>
 
-    <!-- NAV -->
+    <!-- NAV - NOW 100% FLICKER-FREE -->
     <nav>
         <a href="#home">HOME</a>
         <a href="#games">MY GAMES</a>
@@ -240,7 +245,7 @@
         <a href="#social">MY SOCIALS</a>
     </nav>
 
-    <!-- HERO WITH FASTER CONSTANT 3D ROTATION -->
+    <!-- HERO -->
     <header id="home">
         <div class="pyramid-container">
             <svg class="pyramid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
@@ -250,7 +255,6 @@
                         <stop offset="100%" style="stop-color:#0088ff;stop-opacity:1" />
                     </linearGradient>
                 </defs>
-                <!-- 8-bit pyramid layers -->
                 <rect x="190" y="20" width="20" height="20" fill="url(#neonBlue)"/>
                 <rect x="170" y="40" width="60" height="20" fill="url(#neonBlue)"/>
                 <rect x="150" y="60" width="100" height="20" fill="url(#neonBlue)"/>
@@ -268,7 +272,7 @@
 
     <!-- GAMES -->
     <section id="games">
-        <h2>🤖 Games I created! 🤖</h2>
+        <h2>Games I created!</h2>
         <div class="games">
             <div class="game-card" data-game="impossible_stopwatch.html">
                 <div class="game-preview"><h3>The Impossible Stopwatch Game</h3></div>
@@ -283,10 +287,10 @@
                 <button class="coin-btn">INSERT COIN</button>
             </div>
             <div class="game-card" data-game="neon_invaders.html">
-            <h3>Neon Invaders 1987</h3>
-            <p style="margin: 1rem 0 0; font-size: 0.8rem; color:#00ffff;">←→ MOVE SPACE SHOOT</p>
-            <button class="coin-btn">INSERT COIN</button>
-        </div>
+                <h3>Neon Invaders 1987</h3>
+                <p style="margin: 1rem 0 0; font-size: 0.8rem; color:#00ffff;">←→ MOVE SPACE SHOOT</p>
+                <button class="coin-btn">INSERT COIN</button>
+            </div>
             <div class="game-card" data-game="Matrix word game computer terminal.html">
                 <div class="game-preview"><h3>Computer Terminal Word Game</h3></div>
                 <button class="coin-btn">INSERT COIN</button>
@@ -296,7 +300,7 @@
 
     <!-- HIGH SCORES -->
     <section id="scores">
-        <h2>👑 My Track Record 👑</h2>
+        <h2>My Track Record</h2>
         <div class="scoreboard">
             <h3>My Global Leaderboard Rankings</h3>
             <table>
@@ -318,7 +322,7 @@
 
     <!-- SOCIAL -->
     <section id="social">
-        <h2>↓ MY SOCIALS ↓</h2>
+        <h2>MY SOCIALS</h2>
         <p style="text-align:center; margin-bottom: 1rem; color:#00ffff;">Support me here! ;)</p>
         <div class="social-grid">
             <a href="https://discord.gg/QEgHBQjS" target="_blank" class="social-btn discord">Discord</a>
@@ -335,10 +339,8 @@
     <audio id="coinSound" src="https://www.myinstants.com/media/sounds/insert-coin-arcade-machine.mp3" preload="auto"></audio>
 
     <script>
-        // Track any pending timeouts for loading states
-        let loadingTimeouts = new Map(); // Map buttons to their timeout IDs
+        let loadingTimeouts = new Map();
 
-        // Modified coin button handler to allow cancellation
         document.querySelectorAll('.coin-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -347,49 +349,27 @@
                 const url = this.closest('.game-card').dataset.game;
                 this.textContent = 'LOADING...';
                 this.style.background = '#00ff00';
-                const timeoutId = setTimeout(() => {
-                    location.href = url;
-                }, 1000);
-                loadingTimeouts.set(this, timeoutId); // Track the timeout
+                const timeoutId = setTimeout(() => location.href = url, 1000);
+                loadingTimeouts.set(this, timeoutId);
             });
         });
 
         document.querySelectorAll('.clickable-row').forEach(row => {
-            row.addEventListener('click', function() {
-                const url = this.getAttribute('data-href');
-                if (url) {
-                    window.open(url, '_blank');
-                }
-            });
+            row.addEventListener('click', () => window.open(row.dataset.href, '_blank'));
         });
 
-        setInterval(() => {
-            if (Math.random() > 0.95) {
-                document.body.style.filter = 'brightness(1.3)';
-                setTimeout(() => document.body.style.filter = '', 80);
-            }
-        }, 400);
+        // Removed the random brightness flicker that was causing layout shifts & nav flickering
+        // If you want a rare screen flash effect, we can do it cleanly without touching layout
 
-        // Cleanup function to cancel loading when leaving the page (e.g., back button)
         function cleanupOnLeave() {
-            // Reset all loading buttons and clear timeouts
             document.querySelectorAll('.coin-btn').forEach(btn => {
-                const timeoutId = loadingTimeouts.get(btn);
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    loadingTimeouts.delete(btn);
-                }
+                const id = loadingTimeouts.get(btn);
+                if (id) { clearTimeout(id); loadingTimeouts.delete(btn); }
                 btn.textContent = 'INSERT COIN';
-                btn.style.background = '';
-                btn.style.color = '';
-                btn.style.boxShadow = '';
-                btn.style.animation = '';
-                btn.style.transform = '';
-                btn.style.border = '';
+                btn.style.cssText = ''; // Reset all inline styles
             });
         }
 
-        // Listen for events that indicate the user is leaving the page
         window.addEventListener('beforeunload', cleanupOnLeave);
         window.addEventListener('pagehide', cleanupOnLeave);
         window.addEventListener('pageshow', cleanupOnLeave);
