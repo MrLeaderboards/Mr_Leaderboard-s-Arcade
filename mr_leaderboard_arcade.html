@@ -334,6 +334,10 @@
     <audio id="coinSound" src="https://www.myinstants.com/media/sounds/insert-coin-arcade-machine.mp3" preload="auto"></audio>
 
     <script>
+        // Track any pending timeouts for loading states
+        let loadingTimeouts = new Map(); // Map buttons to their timeout IDs
+
+        // Modified coin button handler to allow cancellation
         document.querySelectorAll('.coin-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -342,7 +346,10 @@
                 const url = this.closest('.game-card').dataset.game;
                 this.textContent = 'LOADING...';
                 this.style.background = '#00ff00';
-                setTimeout(() => location.href = url, 1000);
+                const timeoutId = setTimeout(() => {
+                    location.href = url;
+                }, 1000);
+                loadingTimeouts.set(this, timeoutId); // Track the timeout
             });
         });
 
@@ -361,6 +368,24 @@
                 setTimeout(() => document.body.style.filter = '', 80);
             }
         }, 400);
+
+        // Cleanup function to cancel loading when leaving the page (e.g., back button)
+        function cleanupOnLeave() {
+            // Reset all loading buttons and clear timeouts
+            document.querySelectorAll('.coin-btn').forEach(btn => {
+                const timeoutId = loadingTimeouts.get(btn);
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    loadingTimeouts.delete(btn);
+                }
+                btn.textContent = 'INSERT COIN';
+                btn.style.background = '#ffff00';
+            });
+        }
+
+        // Listen for events that indicate the user is leaving the page
+        window.addEventListener('beforeunload', cleanupOnLeave);
+        window.addEventListener('pagehide', cleanupOnLeave);
     </script>
 </body>
 </html>
