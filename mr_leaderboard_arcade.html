@@ -171,13 +171,45 @@
         @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
         .coin-btn:hover { background: #00ffff; color: #000; box-shadow: 0 0 20px #00ffff; transform: translateY(-3px); animation: none; border-color: #000; }
 
+        /* ==== PURCHASE WEBSITES ==== */
+        .shop-intro { text-align: center; color: #00ffff; font-size: 0.8rem; line-height: 2; margin: -0.5rem auto 2.5rem; max-width: 760px; }
+        .shop-intro strong { color: #ffff00; font-weight: normal; }
+        #shop { max-width: 1100px; }
+        .sites { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; }
+        .site-card { flex: 0 1 480px; background: #111; border: 3px solid #00ffff; padding: 1.2rem; text-align: center; box-shadow: 0 0 15px rgba(0,255,255,0.45); display: flex; flex-direction: column; transition: border-color 0.3s, box-shadow 0.3s; }
+        .site-card:hover { border-color: #ff00ff; box-shadow: 0 0 25px rgba(255,0,255,0.7); }
+        .site-card h3 { color: #ffff00; font-size: 1rem; line-height: 1.6; margin-bottom: 0.8rem; text-shadow: 0 0 8px rgba(255,255,0,0.6); }
+        .site-desc { flex: 1; font-size: 0.7rem; line-height: 1.9; color: #ddd; margin-bottom: 1rem; }
+        /* Same layout as Instagram's embed player: 54px header, video at its real shape, 154px footer */
+        .reel { position: relative; width: 100%; max-width: 540px; min-width: 0; margin: 0 auto; background: #000; border: 1px solid #333; }
+        .reel-play { width: 100%; display: flex; flex-direction: column; padding: 0; background: #0b0b14; color: #fff; border: 0; cursor: pointer; font-family: inherit; text-align: left; }
+        .reel-top { height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 12px; font-size: 0.5rem; color: #ccc; border-bottom: 1px solid #222; }
+        .reel-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ff00ff; flex: none; }
+        .reel-media { width: 100%; aspect-ratio: var(--ar, 16 / 9); display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(0deg, #05050a, #05050a 2px, #000 2px, #000 4px); }
+        .reel-bottom { height: 154px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; border-top: 1px solid #222; }
+        .reel-icon { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border: 3px solid #ff00ff; color: #ff00ff; font-size: 1.3rem; box-shadow: 0 0 18px #ff00ff; transition: all 0.25s; }
+        .reel-play:hover .reel-icon, .reel-play:focus-visible .reel-icon { background: #ff00ff; color: #000; }
+        .reel-play:focus-visible { outline: 2px solid #00ffff; outline-offset: -4px; }
+        .reel-label { font-size: 0.75rem; color: #ffff00; }
+        .reel-note { font-size: 0.5rem; color: #8a8aa0; }
+        .reel iframe { display: block; width: 100%; border: 0; background: #fff; }
+        .site-price { margin: 1.2rem 0 0.2rem; font-size: 0.65rem; color: #00ff66; }
+        .inquire-btn { display: inline-block; margin: 0.8rem auto 0; background: #ffff00; color: #000; border: 4px double #000; padding: 0.8rem 1.6rem; font-size: 0.75rem; box-shadow: 0 0 15px #ffff00; transition: all 0.25s; }
+        .inquire-btn:hover { background: #00ffff; color: #000; box-shadow: 0 0 20px #00ffff; transform: translateY(-3px); }
+        .shop-privacy { text-align: center; font-size: 0.5rem; line-height: 1.9; color: #8a8aa0; margin-top: 2rem; }
+        .shop-privacy a { color: #8a8aa0; text-decoration: underline; }
+        @media (max-width: 768px) {
+            .site-card { flex-basis: 100%; }
+            .shop-intro { font-size: 0.65rem; }
+        }
+
         /* Social */
         #social { text-align: center; }
         .social-grid { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 2rem; }
         .social-btn { display: inline-flex; align-items: center; gap: 12px; background: #000; border: 3px solid; padding: 1rem 1.5rem; font-family: inherit; font-size: 1rem; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 0 15px; min-width: 220px; }
         .social-btn:hover { transform: translateY(-8px); box-shadow: 0 0 30px; }
-        .social-btn.discord   { border-color: #5865F2; color: #5865F2; box-shadow: 0 0 15px #5865F2; }
-        .social-btn.discord:hover   { background: #5865F2; color: #000; }
+        .social-btn.instagram { border-color: #E1306C; color: #E1306C; box-shadow: 0 0 15px #E1306C; }
+        .social-btn.instagram:hover { background: #E1306C; color: #fff; }
         .social-btn.twitter   { border-color: #1DA1F2; color: #1DA1F2; box-shadow: 0 0 15px #1DA1F2; }
         .social-btn.twitter:hover   { background: #1DA1F2; color: #fff; }
         .social-btn.youtube   { border-color: #FF0000; color: #FF0000; box-shadow: 0 0 15px #FF0000; }
@@ -259,6 +291,7 @@
         <a href="#home">HOME</a>
         <a href="#games">MY GAMES</a>
         <a href="#scores">MY SCORES</a>
+        <a href="#shop">BUY SITES</a>
         <a href="#social">MY SOCIALS</a>
     </nav>
 
@@ -337,12 +370,113 @@
         </div>
     </section>
 
+    <!-- PURCHASE WEBSITES -->
+    <section id="shop">
+        <h2>Purchase websites</h2>
+        <p class="shop-intro">Every template is <strong>fully customizable</strong>: your brand, your colours, your content.<br>
+        All prices are <strong>on inquiry</strong>. Message me on Instagram and I'll send you a quote.</p>
+        <div class="sites">
+            <article class="site-card">
+                <h3>Coffee Shop</h3>
+                <p class="site-desc">A cosy, modern website for coffee shops and cafés.</p>
+                <div class="reel" data-reel="DfexUNTIf8l" style="--ar: 785 / 442">
+                    <button type="button" class="reel-play" aria-label="Play the Coffee Shop template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>Car Rental</h3>
+                <p class="site-desc">A sleek website for car rental and car hire businesses.</p>
+                <div class="reel" data-reel="Dffkx6ho7qt" style="--ar: 485 / 273">
+                    <button type="button" class="reel-play" aria-label="Play the Car Rental template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>Barber</h3>
+                <p class="site-desc">A sharp website for barbershops and hair studios.</p>
+                <div class="reel" data-reel="DfplY3rNtEW" style="--ar: 485 / 245">
+                    <button type="button" class="reel-play" aria-label="Play the Barber template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>E-commerce Virtual Store</h3>
+                <p class="site-desc">An online store where customers browse and shop your products.</p>
+                <div class="reel" data-reel="DfpfdG3tJiP" style="--ar: 485 / 258">
+                    <button type="button" class="reel-play" aria-label="Play the E-commerce Virtual Store template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>Real Estate</h3>
+                <p class="site-desc">A polished website for real estate agencies and property listings.</p>
+                <div class="reel" data-reel="DfmYe34txPX" style="--ar: 485 / 248">
+                    <button type="button" class="reel-play" aria-label="Play the Real Estate template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>Fast Food Restaurant</h3>
+                <p class="site-desc">A bold, appetising website for fast food spots.</p>
+                <div class="reel" data-reel="DfUtDyINWey" style="--ar: 485 / 274">
+                    <button type="button" class="reel-play" aria-label="Play the Fast Food Restaurant template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+            <article class="site-card">
+                <h3>Restaurant</h3>
+                <p class="site-desc">An elegant website for restaurants and dining.</p>
+                <div class="reel" data-reel="DfkRRYatXR2" style="--ar: 485 / 238">
+                    <button type="button" class="reel-play" aria-label="Play the Restaurant template video from Instagram">
+                        <span class="reel-top"><span class="reel-dot"></span>ritzdogresortwebdesign</span>
+                        <span class="reel-media"><span class="reel-icon">&#9654;</span></span>
+                        <span class="reel-bottom"><span class="reel-label">PLAY VIDEO</span><span class="reel-note">Loads from Instagram</span></span>
+                    </button>
+                </div>
+                <p class="site-price">PRICE: ON INQUIRY</p>
+                <a class="inquire-btn" href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener">INQUIRE</a>
+            </article>
+        </div>
+        <p class="shop-privacy">Videos are hosted on Instagram and only load when you press play. Instagram then receives your IP address and may set cookies. See the <a href="privacy-policy.html">Privacy Policy</a>.</p>
+    </section>
+
     <!-- SOCIAL -->
     <section id="social">
         <h2>↓ MY SOCIALS ↓</h2>
         <p style="text-align:center; margin-bottom: 1rem; color:#00ffff;">Support me here! ;)</p>
         <div class="social-grid">
-            <a href="https://discord.gg/QEgHBQjS" target="_blank" class="social-btn discord">Discord</a>
+            <a href="https://www.instagram.com/ritzdogresortwebdesign/" target="_blank" rel="noopener" class="social-btn instagram">Instagram</a>
             <a href="https://x.com/Mr_Leaderboards" target="_blank" class="social-btn twitter">X</a>
             <a href="https://www.youtube.com/@MrLeaderboards" target="_blank" class="social-btn youtube">YouTube</a>
             <a href="https://www.twitch.tv/mr_leaderboards" target="_blank" class="social-btn twitch">Twitch</a>
@@ -391,6 +525,31 @@
         window.addEventListener('beforeunload', cleanupOnLeave);
         window.addEventListener('pagehide', cleanupOnLeave);
         window.addEventListener('pageshow', cleanupOnLeave);
+    </script>
+    <script>
+        // Purchase websites: Instagram videos load only when the visitor presses play
+        document.querySelectorAll('.reel-play').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var box = btn.closest('.reel');
+                var f = document.createElement('iframe');
+                f.src = 'https://www.instagram.com/reel/' + encodeURIComponent(box.dataset.reel) + '/embed/';
+                f.title = btn.getAttribute('aria-label').replace('Play the ', '').replace(' from Instagram', '');
+                f.loading = 'lazy';
+                f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write';
+                f.allowFullscreen = true;
+                f.style.height = btn.offsetHeight + 'px';
+                box.replaceChildren(f);
+            });
+        });
+        // Let Instagram's embed tell us its real height so nothing is cut off
+        window.addEventListener('message', function (e) {
+            if (e.origin !== 'https://www.instagram.com') return;
+            var d; try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+            if (!d || d.type !== 'MEASURE' || !d.details || !d.details.height) return;
+            document.querySelectorAll('.reel iframe').forEach(function (f) {
+                if (f.contentWindow === e.source) f.style.height = d.details.height + 'px';
+            });
+        });
     </script>
     <!-- Ads load only after the visitor accepts in the cookie banner (see consent.js) -->
     <script>
