@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Mr Leaderboard's Arcade</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="fonts.css">
 <style>
     *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
     html, body { height: 100%; overflow: hidden; }
@@ -203,6 +204,17 @@
         .coin-btn { font-size: 1rem; padding: 0.9rem 1.8rem; }
         .marquee { font-size: 0.6rem; }
     }
+
+    /* ==== LEGAL LINKS ==== */
+    .legal-links { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 6; text-align: center;
+        font-size: 0.5rem; letter-spacing: 1px; }
+    .legal-links a { color: #8a8aa0; margin: 0 0.6rem; }
+    .legal-links a:hover { color: #ffff00; }
+</style>
+<style id="hide-scrollbar">
+    /* Hide the scrollbar but keep scrolling (mouse wheel, touch, keyboard) */
+    html, body { scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 </style>
 </head>
 
@@ -223,6 +235,11 @@
             <p class="teaser">The man, the myth, the legend!</p>
             <a href="mr_leaderboard_arcade.html" class="coin-btn">Teleport here</a>
         </header>
+
+        <nav class="legal-links">
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="#" data-cookie-settings>Cookie settings</a>
+        </nav>
     </div>
 </div>
 
@@ -259,6 +276,14 @@
         }, 1500);  // Extended to 1.5s to match transition
     });
 </script>
+
+<!-- Ads load only after the visitor accepts in the cookie banner (see consent.js) -->
+<script>
+    window.MLA_ADS = [
+        { src: 'https://5gvci.com/act/files/tag.min.js?z=12286209', attrs: { 'data-cfasync': 'false' } } // Monetag In-Page Push (banner)
+    ];
+</script>
+<script src="consent.js" defer></script>
 
 </body>
 </html>
